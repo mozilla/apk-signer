@@ -1,0 +1,12 @@
+*.py[co]
+*.sw[po]
+*.egg-info
+.coverage
+.DS_Store
+.noseids
+.tox
+docs/_build/*
+*~
+*.mo
+*.db
+dist
