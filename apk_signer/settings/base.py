@@ -24,6 +24,7 @@ SECRET_KEY = ''
 DEBUG = False
 TEMPLATE_DEBUG = False
 
+# On production, this must contain the hostname of the Django app.
 ALLOWED_HOSTS = []
 
 
@@ -101,6 +102,7 @@ DJANGO_PARANOIA_REPORTERS = [
 SESSION_ENGINE = 'django_paranoia.sessions'
 
 
+SYSLOG_TAG = 'http_app_apk_signer'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -154,6 +156,8 @@ LOGGING = {
         },
     }
 }
+
+SENTRY_DSN = ''
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
