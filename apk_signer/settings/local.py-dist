@@ -1,6 +1,16 @@
 # This is an example settings/local.py file.
 # These settings can override what's in settings/base.py
 
+
+# On a production site, you'd want to import the
+# appropriate site settings like this:
+#
+# from .sites.dev.settings_base import *
+
+
+
+# For local development, here are some decent defaults:
+
 from . import base
 
 # This is for development:
@@ -23,7 +33,6 @@ SECRET_KEY = ''
 
 ## Log settings
 
-# SYSLOG_TAG = "http_app_playdoh"  # Make this unique to your project.
 #LOGGING = base.LOGGING
 #LOGGING['loggers']['']['handlers'] = ['console']
 #LOGGING['loggers']['cef']['handlers'] = ['console']
