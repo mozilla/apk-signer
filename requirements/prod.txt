@@ -3,3 +3,14 @@
 # foo==1.2.3 and you list all dependencies explicitly.
 
 -r compiled.txt
+
+cef==0.5
+commonware==0.4.2
+Django==1.6.1
+django-filter==0.7
+django-paranoia==0.1.8.7
+django-statsd-mozilla==0.3.10
+djangorestframework==2.3.12
+mozilla-logger==0.2
+raven==4.0.3
+statsd==2.1.2

@@ -10,3 +10,4 @@ docs/_build/*
 *.mo
 *.db
 dist
+apk_signer/settings/local.py
