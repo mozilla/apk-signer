@@ -1,0 +1,14 @@
+language: python
+python:
+  - "2.7"
+
+install:
+  - pip install --no-deps -r requirements/dev.txt --use-mirrors
+
+script: ./manage.py test
+notifications:
+  irc:
+    channels:
+      - "irc.mozilla.org#amo-bots"
+    on_success: change
+    on_failure: always
