@@ -2,6 +2,8 @@ from django.conf import settings
 
 from commonware.log import getLogger
 from cef import log_cef as orig_log_cef
+from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
 
 sys_cef_log = getLogger('apk_signer.cef')
 
@@ -28,3 +30,11 @@ def log_cef(msg, request, **kw):
             cef_kw[k] = v
 
     orig_log_cef(msg, severity, request.META.copy(), **cef_kw)
+
+
+class UnprotectedAPIView(APIView):
+    """
+    An APIView that is not protected by global authentication (e.g. Hawk).
+    """
+    authentication_classes = []
+    permission_classes = [AllowAny]
