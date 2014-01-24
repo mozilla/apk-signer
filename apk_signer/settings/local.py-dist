@@ -36,3 +36,8 @@ SECRET_KEY = ''
 #LOGGING = base.LOGGING
 #LOGGING['loggers']['']['handlers'] = ['console']
 #LOGGING['loggers']['cef']['handlers'] = ['console']
+
+HAWK_CREDENTIALS = base.HAWK_CREDENTIALS
+# Set these to long random strings.
+HAWK_CREDENTIALS['apk-factory']['key'] = ''
+HAWK_CREDENTIALS['apk-signer']['key'] = ''

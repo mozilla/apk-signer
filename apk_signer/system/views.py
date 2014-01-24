@@ -3,20 +3,26 @@ from commonware.log import getLogger
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from apk_signer.base import log_cef
+from apk_signer.base import log_cef, UnprotectedAPIView
 
 
 log = getLogger(__name__)
 
 
-class CEFView(APIView):
+class AuthView(APIView):
+
+    def get(self, request):
+        return Response({'message': 'authentication successful'})
+
+
+class CEFView(UnprotectedAPIView):
 
     def get(self, request):
         log_cef('this is a test message', request, severity=5)
         return Response({'message': 'CEF messages sent'})
 
 
-class LogView(APIView):
+class LogView(UnprotectedAPIView):
 
     def get(self, request):
         log.info('This is an info message')
@@ -24,7 +30,7 @@ class LogView(APIView):
         return Response({'message': 'messages logged on server'})
 
 
-class StatsView(APIView):
+class StatsView(UnprotectedAPIView):
 
     def get(self, request):
         key = 'apk_signer.system_check'
@@ -32,7 +38,7 @@ class StatsView(APIView):
         return Response({'message': '{key} incremented'.format(key=key)})
 
 
-class TraceView(APIView):
+class TraceView(UnprotectedAPIView):
 
     def post(self, request):
         raise RuntimeError(

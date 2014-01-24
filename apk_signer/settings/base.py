@@ -154,6 +154,12 @@ LOGGING = {
         'cef': {
             'handlers': ['cef_syslog']
         },
+        'hawk': {
+            'handlers': ['unicodesyslog'],
+            # Set this to DEBUG for any Hawk auth debugging.
+            'level': 'INFO',
+            'propagate': True,
+        },
     }
 }
 
@@ -165,6 +171,9 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PARSER_CLASSES': (
         'rest_framework.parsers.JSONParser',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'apk_signer.resthawk.HawkAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny',
@@ -200,3 +209,25 @@ NOSE_ARGS = [
     '--with-blockage',
     '--http-whitelist=""',
 ]
+
+# When True, it means Hawk authentication will be disabled everywhere.
+# This is mainly just to get a speed-up while testing.
+SKIP_HAWK_AUTH = False
+
+HAWK_CREDENTIALS = {
+    # These credentials are for requests that the APK Factory will make to the
+    # signer.
+    'apk-factory': {
+        'id': 'apk-factory',
+        # Set this to some long random string.
+        'key': '',
+        'algorithm': 'sha256'
+    },
+    # These credentials are for responses that the APK Signer will emit.
+    'apk-signer': {
+        'id': 'apk-signer',
+        # Set this to some long random string.
+        'key': '',
+        'algorithm': 'sha256'
+    }
+}

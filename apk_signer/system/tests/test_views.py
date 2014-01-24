@@ -6,6 +6,15 @@ from nose.tools import eq_
 from apk_signer.base.tests import TestCase
 
 
+class TestAuthView(TestCase):
+
+    def test(self):
+        res = self.client.get(reverse('system.auth'))
+        self.assert2x(res)
+        eq_(self.json(res),
+            {'message': 'authentication successful'})
+
+
 class TestCEFView(TestCase):
 
     @patch('apk_signer.system.views.log_cef')
