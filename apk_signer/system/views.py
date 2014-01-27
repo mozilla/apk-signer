@@ -1,9 +1,8 @@
 from django_statsd.clients import statsd
 from commonware.log import getLogger
-from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from apk_signer.base import log_cef, UnprotectedAPIView
+from apk_signer.base import APIView, log_cef, UnprotectedAPIView
 
 
 log = getLogger(__name__)

@@ -3,8 +3,10 @@ from django.conf import settings
 from commonware.log import getLogger
 from cef import log_cef as orig_log_cef
 from rest_framework.permissions import AllowAny
-from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.views import APIView as RestAPIView
 
+log = getLogger(__name__)
 sys_cef_log = getLogger('apk_signer.cef')
 
 
@@ -30,6 +32,27 @@ def log_cef(msg, request, **kw):
             cef_kw[k] = v
 
     orig_log_cef(msg, severity, request.META.copy(), **cef_kw)
+
+
+def format_form_errors(forms):
+    errors = {}
+    if not isinstance(forms, list):
+        forms = [forms]
+    for f in forms:
+        log.info('Error processing form: {0}'.format(f.__class__.__name__))
+        if isinstance(f.errors, list):  # Cope with formsets.
+            for e in f.errors:
+                errors.update(e)
+            continue
+        errors.update(dict(f.errors.items()))
+
+    return {'error': errors}
+
+
+class APIView(RestAPIView):
+
+    def form_errors(self, forms):
+        return Response(format_form_errors(forms), status=400)
 
 
 class UnprotectedAPIView(APIView):
