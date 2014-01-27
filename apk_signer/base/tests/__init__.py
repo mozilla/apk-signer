@@ -17,6 +17,10 @@ class TestCase(test.TestCase):
 
     def json(self, response, expected_status=200,
              expected_type='application/json'):
-        eq_(response.status_code, expected_status, response.content)
+        eq_(response.status_code, expected_status,
+            'Status {actual} != {expected} (expected); response={res}'
+            .format(actual=response.status_code,
+                    expected=expected_status,
+                    res=response.content))
         eq_(response['Content-Type'], expected_type, response.content)
         return json.loads(response.content)

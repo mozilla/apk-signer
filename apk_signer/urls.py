@@ -8,6 +8,7 @@ from django import http
 # admin.autodiscover()
 
 urlpatterns = patterns('',
+    url(r'sign', include('apk_signer.sign.urls')),
     url(r'system/', include('apk_signer.system.urls')),
     url(r'', include('apk_signer.base.urls')),
 

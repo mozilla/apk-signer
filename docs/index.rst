@@ -2,9 +2,19 @@
 APK Signer
 ==========
 
-See README.rst
+Mozilla's APK signing library and service
 
-TODO: move REAME here!
+Description
+===========
+
+The APK signing service is responsible for signing APK (Android package files)
+with developer keys so that the APKs can be integrated securely into the Android
+ecosystem.
+
+See also:
+
+* `APK Factory Service <https://github.com/mozilla/apk-factory-service>`_
+* `APK Factory Library <https://github.com/mozilla/apk-factory-library>`_
 
 Contents
 --------
@@ -12,7 +22,8 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   installation
+   api
+   development
 
 Indices and tables
 ------------------
