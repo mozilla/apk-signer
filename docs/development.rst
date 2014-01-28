@@ -32,7 +32,11 @@ used to.
 Running A development server
 ============================
 
-::
+Take a look at ``apk_signer/settings/local.py`` and fill in some local settings
+according to the comments. You'll probably need to set some things up like
+Amazon S3 storage credentials.
+
+When you're ready, start a development server like::
 
     ./manage.py runserver
 
