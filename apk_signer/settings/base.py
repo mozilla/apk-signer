@@ -231,3 +231,13 @@ HAWK_CREDENTIALS = {
         'algorithm': 'sha256'
     }
 }
+
+# Amazon Web Services access key for use with S3.
+AWS_ACCESS_KEY = ''
+
+# Amazon Web Services secret for use with S3.
+AWS_SECRET_KEY = ''
+
+# Name of S3 bucket where all signed/unsigned APKs are stored.
+# This bucket must already exist.
+S3_BUCKET = 'mozilla-apk-cache-local'
