@@ -44,18 +44,23 @@ Endpoints
     **Request**
 
     :param unsigned_apk_s3_path:
-        A publicly inaccessible Amazon S3 path (in a shared bucket) to an unsigned
-        APK file. Example: ``/path/to/unsigned/file.apk``.
+        An Amazon S3 path (in a shared bucket) to the unsigned
+        APK file that should be fetched and signed.
+        Example: ``/path/to/unsigned/file.apk``.
 
     :param unsigned_apk_s3_hash:
         A SHA512 content hash that can be used to verify the contents of the
         APK file after fetching it from Amazon S3.
 
+    :param signed_apk_s3_path:
+        An Amazon S3 path (in a shared bucket) that the final, signed APK file
+        should be written to.
+        Example: ``/path/to/signed/file.apk``.
+
     **Response**
 
     :param signed_apk_s3_url:
-        A publicly accessible Amazon S3 URL to a
-        signed APK file.
+        A publicly accessible Amazon S3 URL to the signed APK file.
 
     Example:
 

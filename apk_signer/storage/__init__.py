@@ -39,7 +39,7 @@ def put_signed_apk(fp, key_path, conn=None):
 
     bkt = bucket(conn=conn)
     key = bkt.new_key(key_path)
-    key.send_file(fp)
+    key.set_contents_from_file(fp)
     key.set_acl('public-read')
 
 

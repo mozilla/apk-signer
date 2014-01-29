@@ -10,11 +10,13 @@ class SignTestBase(TestCase):
 
     def setUp(self):
         self.key_path = '/path/to/unsigned/file.apk'
+        self.signed_path = '/path/to/signed/file.apk'
 
     def data(self):
         return {
             'unsigned_apk_s3_path': self.key_path,
             'unsigned_apk_s3_hash': 'xyxyxy',
+            'signed_apk_s3_path': self.signed_path,
         }
 
     def post(self, data=None):
@@ -32,6 +34,11 @@ class TestSignView(SignTestBase):
     def test_missing_s3_hash(self):
         data = self.data()
         del data['unsigned_apk_s3_hash']
+        eq_(self.post(data).status_code, 400)
+
+    def test_missing_s3_signed_path(self):
+        data = self.data()
+        del data['signed_apk_s3_path']
         eq_(self.post(data).status_code, 400)
 
 
@@ -52,5 +59,4 @@ class TestSignedStorage(SignTestBase):
 
     def test_put_ok(self):
         self.post()
-        # TODO: validate the new APK path.
-        self.put_signed_apk.assert_called_with(mock.ANY, mock.ANY)
+        self.put_signed_apk.assert_called_with(mock.ANY, self.signed_path)

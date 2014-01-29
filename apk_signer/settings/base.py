@@ -160,6 +160,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        'boto': {
+            'handlers': ['unicodesyslog'],
+            'level': 'INFO',
+            'propagate': True,
+        },
     }
 }
 

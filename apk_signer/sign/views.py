@@ -14,6 +14,7 @@ log = getLogger(__name__)
 class SignForm(ParanoidForm):
     unsigned_apk_s3_path = forms.CharField()
     unsigned_apk_s3_hash = forms.CharField()
+    signed_apk_s3_path = forms.CharField()
 
 
 class SignView(APIView):
@@ -23,11 +24,14 @@ class SignView(APIView):
         if not form.is_valid():
             return self.form_errors([form])
 
-        path = form.cleaned_data['unsigned_apk_s3_path']
-        with storage.get_apk(path) as fp:
-            log.info('about to sign APK at {path}'.format(path=path))
-            # TODO: make a real signed path with manifest URL.
-            new_path = 'apk_id/signed/signed.apk'
-            storage.put_signed_apk(fp, new_path)
+        src = form.cleaned_data['unsigned_apk_s3_path']
+        dest = form.cleaned_data['signed_apk_s3_path']
+
+        with storage.get_apk(src) as fp:
+            fp.seek(0)
+            log.info('about to sign APK from {src} to {dest}'
+                     .format(src=src, dest=dest))
+            # TODO: sign the raw APK and put the signed APK on S3.
+            storage.put_signed_apk(fp, dest)
 
         return Response({'signed_apk_s3_url': 'not implemented'})

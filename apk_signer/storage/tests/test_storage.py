@@ -42,5 +42,5 @@ class TestStorage(TestCase):
             storage.put_signed_apk(fp, self.key_path)
 
         self.bkt.new_key.assert_called_with(self.key_path)
-        self.new_key.send_file.assert_called_with(fp)
+        self.new_key.set_contents_from_file.assert_called_with(fp)
         self.new_key.set_acl.assert_called_with('public-read')
