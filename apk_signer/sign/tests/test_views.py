@@ -1,3 +1,7 @@
+from contextlib import contextmanager
+from cStringIO import StringIO
+import hashlib
+
 from django.core.urlresolvers import reverse
 
 import mock
@@ -11,11 +15,12 @@ class SignTestBase(TestCase):
     def setUp(self):
         self.key_path = '/path/to/unsigned/file.apk'
         self.signed_path = '/path/to/signed/file.apk'
+        self.file_hash = 'maybe'
 
     def data(self):
         return {
             'unsigned_apk_s3_path': self.key_path,
-            'unsigned_apk_s3_hash': 'xyxyxy',
+            'unsigned_apk_s3_hash': self.file_hash,
             'signed_apk_s3_path': self.signed_path,
         }
 
@@ -44,6 +49,10 @@ class TestSignView(SignTestBase):
 
 class TestSignedStorage(SignTestBase):
 
+    @contextmanager
+    def buf(self, content):
+        yield StringIO(content)
+
     def setUp(self):
         super(TestSignedStorage, self).setUp()
 
@@ -53,6 +62,11 @@ class TestSignedStorage(SignTestBase):
         self.get_apk = storage.get_apk
         self.put_signed_apk = storage.put_signed_apk
 
+        content = '<pretend this is APK data>'
+        self.file_hash = hashlib.sha256(content).hexdigest()
+        buf = self.buf(content)
+        self.get_apk.return_value = buf
+
     def test_fetch_ok(self):
         self.post()
         self.get_apk.assert_called_with(self.key_path)
@@ -60,3 +74,8 @@ class TestSignedStorage(SignTestBase):
     def test_put_ok(self):
         self.post()
         self.put_signed_apk.assert_called_with(mock.ANY, self.signed_path)
+
+    def test_hash_fail(self):
+        data = self.data()
+        data['unsigned_apk_s3_hash'] = 'fail'
+        eq_(self.post(data).status_code, 400)

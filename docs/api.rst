@@ -49,8 +49,8 @@ Endpoints
         Example: ``/path/to/unsigned/file.apk``.
 
     :param unsigned_apk_s3_hash:
-        A SHA512 content hash that can be used to verify the contents of the
-        APK file after fetching it from Amazon S3.
+        A SHA256 content hash (in hex) that can be used to verify the
+        contents of the APK file after fetching it from Amazon S3.
 
     :param signed_apk_s3_path:
         An Amazon S3 path (in a shared bucket) that the final, signed APK file
