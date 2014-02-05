@@ -21,11 +21,9 @@ pip_install() {
 
 }
 
-build_rpm() {
-    local package_file="${1}"
-    local ref=$(cd "${ROOT}"; git rev-parse --short=12 HEAD)
-
-    pushd "${ROOT}"/../
+build_env() {
+    local req_file="${ROOT}/requirements/${1}"
+    pushd "${ROOT}"
 
     rm -rf ./venv
 
@@ -34,11 +32,20 @@ build_rpm() {
         --never-download \
         ./venv
 
-    pip_install -r "${ROOT}/requirements/prod.txt"
+    pip_install -r "${req_file}"
     pip_install virtualenv
     rm -f ./venv/lib/python2.{6,7}/no-global-site-packages.txt
 
     ./venv/bin/python ./venv/bin/virtualenv --relocatable ./venv
+
+    popd
+}
+
+build_rpm() {
+    local package_file="${1}"
+    local ref=$(cd "${ROOT}"; git rev-parse --short=12 HEAD)
+
+    pushd "${ROOT}"/../
 
     fpm -s dir -t rpm \
         -n "${RPMNAME}" \
@@ -50,16 +57,25 @@ build_rpm() {
         --directories / \
         -x "*.git" -x "*.pyc" \
         -C . --prefix "/opt/${RPMNAME}" \
-        ./venv ./"${RPMNAME}"
+        ./"${RPMNAME}"
+
     popd
 }
 
 case "${1}" in
+    env)
+        req="prod.txt"
+        if [[ "${2}" == "dev" ]]; then
+            req="dev.txt"
+        fi
+        build_env "${req}"
+        ;;
     rpm)
         if [ $# -lt 2 ]; then
             echo "Usage: ./build rpm <outfile>"
             exit 1
         fi
+        build_env "prod.txt"
         build_rpm "${2}"
         ;;
     *)
