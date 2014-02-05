@@ -8,7 +8,7 @@ ROOT="${PWD}"
 
 RPMNAME=${RPMNAME-"$(basename "${ROOT}")"}
 PYREPO=${PYREPO:-"https://pyrepo.addons.mozilla.org/"}
-BUILD_ID=$(date +%s)
+BUILD_ID=$(date +%Y%m%d%H%M%S)
 
 pip_install() {
     ./venv/bin/pip install \
