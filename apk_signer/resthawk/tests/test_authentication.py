@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.http import HttpResponse
 from django.test import RequestFactory, TestCase
 
 import hawk
@@ -6,20 +7,21 @@ import mock
 from nose.tools import eq_
 from rest_framework.exceptions import AuthenticationFailed
 
-from .. import DummyUser, HawkAuthentication
+from .. import (DummyUser, HawkAuthentication, lookup_credentials,
+                make_hawk_request)
+from ..middleware import HawkResponseMiddleware
 
 
-@mock.patch.object(settings, 'SKIP_HAWK_AUTH', False)
-class TestAuthentication(TestCase):
+class BaseTest(TestCase):
 
     def setUp(self):
-        self.auth = HawkAuthentication()
         self.factory = RequestFactory()
         self.url = 'http://testserver/'
+        self.credentials = settings.HAWK_CREDENTIALS['apk-factory']
 
     def opt(self, override=None):
         opt = {
-            'credentials': settings.HAWK_CREDENTIALS['apk-factory'],
+            'credentials': self.credentials,
             'ext': '',
             'app': '',
             'dlg': '',
@@ -28,6 +30,14 @@ class TestAuthentication(TestCase):
         }
         opt.update(override or {})
         return opt
+
+
+@mock.patch.object(settings, 'SKIP_HAWK_AUTH', False)
+class TestAuthentication(BaseTest):
+
+    def setUp(self):
+        super(TestAuthentication, self).setUp()
+        self.auth = HawkAuthentication()
 
     def test_missing_auth_header(self):
         req = self.factory.get('/')
@@ -100,3 +110,39 @@ class TestAuthentication(TestCase):
             self.auth.authenticate(req)
 
         eq_(exc.exception.detail, 'authentication failed')
+
+
+@mock.patch.object(settings, 'SKIP_HAWK_AUTH', False)
+class TestMiddleware(BaseTest):
+
+    def setUp(self):
+        super(TestMiddleware, self).setUp()
+        self.mw = HawkResponseMiddleware()
+
+    def request(self, method='GET'):
+        opt = self.opt(override={'payload': ''})
+        header = hawk.client.header(self.url, method, options=opt)
+        req = self.factory.get(self.url, HTTP_AUTHORIZATION=header['field'])
+
+        # Simulate how the view caches artifacts.
+        server = hawk.Server(make_hawk_request(req), lookup_credentials)
+        artifacts = server.authenticate({'payload': req.body})
+        req.META['_HAWK_ARTIFACTS'] = artifacts
+
+        return req, header['artifacts']
+
+    def verify(self, response, artifacts):
+        return hawk.client.authenticate(
+                        {'headers': response},
+                        self.credentials,
+                        artifacts,
+                        {'payload': response.content, 'required': True})
+
+    def test_ok(self):
+        req, artifacts = self.request()
+
+        response = HttpResponse('the response')
+        res = self.mw.process_response(req, response)
+
+        eq_(self.verify(res, artifacts), True)
+        #assert 0

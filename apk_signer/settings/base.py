@@ -42,6 +42,7 @@ INSTALLED_APPS = (
 
     # Local apps
     'apk_signer.base',
+    'apk_signer.resthawk',
     'apk_signer.system',
 )
 
@@ -55,6 +56,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     #'django.contrib.messages.middleware.MessageMiddleware',
     'django_paranoia.sessions.ParanoidSessionMiddleware',
+    'apk_signer.resthawk.middleware.HawkResponseMiddleware',
 )
 
 ROOT_URLCONF = 'apk_signer.urls'
@@ -220,21 +222,14 @@ NOSE_ARGS = [
 SKIP_HAWK_AUTH = False
 
 HAWK_CREDENTIALS = {
-    # These credentials are for requests that the APK Factory will make to the
-    # signer.
+    # These credentials are for requests the APK Factory to communicate
+    # with the signer.
     'apk-factory': {
         'id': 'apk-factory',
         # Set this to some long random string.
         'key': '',
         'algorithm': 'sha256'
     },
-    # These credentials are for responses that the APK Signer will emit.
-    'apk-signer': {
-        'id': 'apk-signer',
-        # Set this to some long random string.
-        'key': '',
-        'algorithm': 'sha256'
-    }
 }
 
 # Amazon Web Services access key for use with S3.

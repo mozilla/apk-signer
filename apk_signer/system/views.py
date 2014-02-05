@@ -11,7 +11,10 @@ log = getLogger(__name__)
 class AuthView(APIView):
 
     def get(self, request):
-        return Response({'message': 'authentication successful'})
+        return Response({'message': 'GET authentication successful'})
+
+    def post(self, request):
+        return Response({'message': 'POST authentication successful'})
 
 
 class CEFView(UnprotectedAPIView):
