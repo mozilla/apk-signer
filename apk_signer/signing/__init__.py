@@ -86,7 +86,7 @@ def generate(webapp_manifest_url):
     # not certain that we want to install that.
 
     # Store key in S3
-    fp = open(keystore, 'rb'):
+    fp = open(keystore, 'rb')
     try:
         storage.put_app_key(fp, keyhash(webapp_manifest_url))
     except storage.AppKeyAlreadyExists, e:
