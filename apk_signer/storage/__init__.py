@@ -11,17 +11,19 @@ def connect(**kw):
                         **kw)
 
 
-def bucket(conn=None):
+def bucket(conn=None, name=None):
     if not conn:
         conn = connect()
-    return conn.get_bucket(settings.S3_BUCKET)
+    if not name:
+        name = settings.S3_BUCKET
+    return conn.get_bucket(name)
 
 
-def get_apk(key_path, conn=None, suffix='.apk'):
+def get_apk(key_path, conn=None, suffix='.apk', bkt_name=None):
     if not conn:
         conn = connect()
 
-    bkt = bucket(conn=conn)
+    bkt = bucket(conn=conn, name=bkt_name)
     key = bkt.get_key(key_path)
     if not key:
         # TODO: maybe add a retry loop here if we hit this error a lot.
@@ -44,15 +46,17 @@ def put_signed_apk(fp, key_path, conn=None):
 
 
 def get_app_key(key_path, conn=None):
-    return get_apk(key_path, conn, '.p12')
+    if not conn:
+        conn = connect()
+    return get_apk(key_path, conn=conn, suffix='.p12',
+                   bkt_name=settings.S3_BUCKET_KEYS)
 
 
 def put_app_key(fp, key_path, conn=None):
-    """ Look ma!  Duplication of logic!"""
     if not conn:
         conn = connect()
 
-    bkt = bucket(conn=conn)
+    bkt = bucket(conn=conn, name=settings.S3_BUCKET_KEYS)
     if bkt.get_key(key_path) is not None:
         raise AppKeyAlreadyExists('App signing key {path} already exists in '
                                   '{bkt}'.format(path=key_path, bkt=bkt))
