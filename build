@@ -1,0 +1,85 @@
+#!/bin/bash
+
+set -e
+set -x
+
+cd "$(dirname "${0}")"
+ROOT="${PWD}"
+
+RPMNAME=${RPMNAME-"$(basename "${ROOT}")"}
+PYREPO=${PYREPO:-"https://pyrepo.addons.mozilla.org/"}
+BUILD_ID=$(date +%Y%m%d%H%M%S)
+
+pip_install() {
+    ./venv/bin/pip install \
+        --exists-action=w \
+        --no-deps \
+        --no-index \
+        --download-cache=/tmp/pip-cache \
+        -f "${PYREPO}" \
+        "$@"
+
+}
+
+build_env() {
+    local req_file="${ROOT}/requirements/${1}"
+    pushd "${ROOT}"
+
+    rm -rf ./venv
+
+    virtualenv --python=python \
+        --distribute \
+        --never-download \
+        ./venv
+
+    pip_install -r "${req_file}"
+    pip_install virtualenv
+    rm -f ./venv/lib/python2.{6,7}/no-global-site-packages.txt
+
+    ./venv/bin/python ./venv/bin/virtualenv --relocatable ./venv
+
+    popd
+}
+
+build_rpm() {
+    local package_file="${1}"
+    local ref=$(cd "${ROOT}"; git rev-parse --short=12 HEAD)
+
+    pushd "${ROOT}"/../
+
+    fpm -s dir -t rpm \
+        -n "${RPMNAME}" \
+        --provides moz-deploy-app \
+        --rpm-compression none \
+        -v "${BUILD_ID}" \
+        -p "${package_file}" \
+        --iteration "${ref}" \
+        --directories / \
+        -x "*.git" -x "*.pyc" \
+        -C . --prefix "/opt/${RPMNAME}" \
+        ./"${RPMNAME}"
+
+    popd
+}
+
+case "${1}" in
+    env)
+        req="prod.txt"
+        if [[ "${2}" == "dev" ]]; then
+            req="dev.txt"
+        fi
+        build_env "${req}"
+        ;;
+    rpm)
+        if [ $# -lt 2 ]; then
+            echo "Usage: ./build rpm <outfile>"
+            exit 1
+        fi
+        build_env "prod.txt"
+        build_rpm "${2}"
+        ;;
+    *)
+        echo "Please specify an action."
+        exit 1
+        ;;
+esac
