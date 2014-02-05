@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import os.path
 import subprocess
@@ -97,8 +98,9 @@ class TestSigning(TestCase):
     def test_sign(self):
         apk = tempfile.NamedTemporaryFile(suffix=".apk")
         z = Zipfile(apk, 'w', zipfile.ZIP_DEFLATED)
-        z.writestr("img/pixel.gif", PIXEL_GIF)
+        z.writestr("img/pixel.gif", base64.b64decode(PIXEL_GIF))
         z.writestr("index.html", "")
         z.writestr("manifest.webapp", MANIFEST)
         apk.seek(0)
         self.assertTrue(signing.sign(self.testurl, apk))
+        z.close()
