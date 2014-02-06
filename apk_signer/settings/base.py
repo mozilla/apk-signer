@@ -156,7 +156,7 @@ LOGGING = {
         'cef': {
             'handlers': ['cef_syslog']
         },
-        'hawk': {
+        'mohawk': {
             'handlers': ['unicodesyslog'],
             # Set this to DEBUG for any Hawk auth debugging.
             'level': 'INFO',
