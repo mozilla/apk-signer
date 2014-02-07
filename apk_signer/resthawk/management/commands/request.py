@@ -2,6 +2,7 @@ from optparse import make_option
 
 from django.core.management.base import BaseCommand, CommandError
 
+import logging
 from mohawk import Sender
 
 from apk_signer.resthawk import lookup_credentials
@@ -22,6 +23,10 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
+        hawk_log = logging.getLogger('mohawk')
+        hawk_log.setLevel(logging.DEBUG)
+        hawk_log.addHandler(logging.StreamHandler())
+
         try:
             import requests
         except ImportError:
