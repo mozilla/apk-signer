@@ -40,7 +40,6 @@ SECRET_KEY = ''
 HAWK_CREDENTIALS = base.HAWK_CREDENTIALS
 # Set these to long random strings.
 HAWK_CREDENTIALS['apk-factory']['key'] = ''
-HAWK_CREDENTIALS['apk-signer']['key'] = ''
 
 # Set up your AWS credentials.
 AWS_ACCESS_KEY = ''

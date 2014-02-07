@@ -21,4 +21,4 @@ HAWK_CREDENTIALS = {
     }
 }
 
-LOGGING['loggers']['hawk']['level'] = 'DEBUG'
+LOGGING['loggers']['mohawk']['level'] = 'DEBUG'

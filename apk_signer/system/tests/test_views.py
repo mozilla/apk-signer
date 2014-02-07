@@ -8,11 +8,17 @@ from apk_signer.base.tests import TestCase
 
 class TestAuthView(TestCase):
 
-    def test(self):
+    def test_get(self):
         res = self.client.get(reverse('system.auth'))
         self.assert2x(res)
         eq_(self.json(res),
-            {'message': 'authentication successful'})
+            {'message': 'GET authentication successful'})
+
+    def test_post(self):
+        res = self.client.post(reverse('system.auth'))
+        self.assert2x(res)
+        eq_(self.json(res),
+            {'message': 'POST authentication successful'})
 
 
 class TestCEFView(TestCase):
