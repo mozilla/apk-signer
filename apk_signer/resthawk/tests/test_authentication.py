@@ -153,7 +153,7 @@ class TestMiddleware(BaseTest):
                             url, method,
                             content=req.body,
                             content_type=req.META['content_type'])
-        req.hawk_receiver = receiver
+        req.META['hawk.receiver'] = receiver
 
     def accept_response(self, response, sender):
         sender.accept_response(response['Server-Authorization'],

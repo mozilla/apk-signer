@@ -25,8 +25,11 @@ class HawkAuthentication(BaseAuthentication):
         on_success = (DummyUser(), None)
 
         # In case there is an exception, tell others that the view passed
-        # through Hawk authorization.
-        request.hawk_receiver = None
+        # through Hawk authorization. The META dict is used because
+        # middleware may not get an identical request object.
+        # A dot-separated key is to work around potential environ var
+        # pollution of META.
+        request.META['hawk.receiver'] = None
 
         if getattr(settings, 'SKIP_HAWK_AUTH', False):
             log.warn('Hawk authentication disabled via settings')
@@ -50,7 +53,7 @@ class HawkAuthentication(BaseAuthentication):
 
         # Pass our receiver object to the middleware so the request header
         # doesn't need to be parsed again.
-        request.hawk_receiver = receiver
+        request.META['hawk.receiver'] = receiver
         return on_success
 
 
