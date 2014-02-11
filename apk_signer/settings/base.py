@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 """
 import logging.handlers
 import cef
+import tempfile
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
@@ -241,3 +242,36 @@ AWS_SECRET_KEY = ''
 # Name of S3 bucket where all signed/unsigned APKs are stored.
 # This bucket must already exist.
 S3_BUCKET = 'mozilla-apk-cache-local'
+
+
+# Various options for the signing process.
+# The default testing value is the RHS
+
+# Path to the keytool and jarsigner executables
+# If left blank, `keytool` will be executed with no prefix
+# (i.e. using $PATH)
+APK_SIGN_JAVA_CLI_PATH = ''
+
+# Where to store temporary files for keystore manipulation
+APK_SIGNER_KEYS_TEMP_DIR = tempfile.gettempdir()
+
+# The password for all PKCS12 files
+APK_SIGNER_STORE_PASSWD = ''
+
+# How long is each generated self signed certificate valid for
+APK_SIGNER_VALIDITY_PERIOD = 3650  # 10 years
+
+# Type of key to use to sign the APK manifest
+APK_SIGNER_APP_KEY_ALGO = 'RSA'
+
+# Length of the generated key in bits
+APK_SIGNER_APP_KEY_LENGTH = 2048
+
+# Weird string that names the algo to use to sign the APK manifest.
+# See http://docs.oracle.com/javase/7/docs/api/java/security/Signature.html
+# Even though that page says SHA256withRSA is required, keytool and
+# jarsigner both throw an error in my test environment
+APK_SIGNER_SIGN_SIG_ALGO = 'SHA1withRSA'
+
+# Digest algorithm to use on the APK manifest to generate signatures
+APK_SIGNER_SIGN_DIGEST_ALGO = 'SHA1'

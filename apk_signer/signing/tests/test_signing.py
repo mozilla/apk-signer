@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 import base64
 import hashlib
 import os.path
 import subprocess
 import tempfile
 import zipfile
+from zipfile import ZipFile
 
 from apk_signer.base.tests import TestCase
 
@@ -11,16 +13,6 @@ import mock
 
 from apk_signer import signing
 from apk_signer.storage import NoSuchKey
-
-
-# Python 2.6 and earlier doesn't have context manager support
-ZipFile = zipfile.ZipFile
-if not hasattr(zipfile.ZipFile, "__enter__"):
-    class ZipFile(zipfile.ZipFile):
-        def __enter__(self):
-            return self
-        def __exit__(self, type, value, traceback):
-            self.close()
 
 
 PIXEL_GIF = 'R0lGODlhAQABAJH/AP///wAAAP///wAAACH/C0FET0JFOklSMS4wAt7tACH5BAEAAAIALAAAAAABAAEAAAICVAEAOw=='
@@ -67,7 +59,7 @@ class TestSigning(TestCase):
 
     def setUp(self):
         self.testurl = "http://deltron3030.testmanifest.com/manifest.webapp"
-        self.digest = hashlib.sha1(testurl).hexdigest()
+        self.digest = hashlib.sha1(self.testurl).hexdigest()
         self.dn = "CN=Generated key for {url}, OU=Mozilla APK Factory, " \
                   "O=Mozilla Marketplace, L=Mountain View, ST=California, " \
                   "C=US".format(url=self.testurl)
@@ -97,7 +89,7 @@ class TestSigning(TestCase):
 
     def test_sign(self):
         apk = tempfile.NamedTemporaryFile(suffix=".apk")
-        z = Zipfile(apk, 'w', zipfile.ZIP_DEFLATED)
+        z = ZipFile(apk, 'w', zipfile.ZIP_DEFLATED)
         z.writestr("img/pixel.gif", base64.b64decode(PIXEL_GIF))
         z.writestr("index.html", "")
         z.writestr("manifest.webapp", MANIFEST)

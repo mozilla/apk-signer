@@ -49,14 +49,14 @@ def get_app_key(key_path, conn=None):
     if not conn:
         conn = connect()
     return get_apk(key_path, conn=conn, suffix='.p12',
-                   bkt_name=settings.S3_BUCKET_KEYS)
+                   bkt_name=settings.S3_BUCKET)
 
 
 def put_app_key(fp, key_path, conn=None):
     if not conn:
         conn = connect()
 
-    bkt = bucket(conn=conn, name=settings.S3_BUCKET_KEYS)
+    bkt = bucket(conn=conn, name=settings.S3_BUCKET)
     if bkt.get_key(key_path) is not None:
         raise AppKeyAlreadyExists('App signing key {path} already exists in '
                                   '{bkt}'.format(path=key_path, bkt=bkt))
