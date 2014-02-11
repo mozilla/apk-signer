@@ -2,7 +2,7 @@
 from apk_signer.settings import base as base_settings
 import private_base as private
 
-DOMAIN = 'apk-signer.allizom.org'
+DOMAIN = 'signer.apk.stage.mozaws.net'
 ALLOWED_HOSTS = [DOMAIN]
 
 SECRET_KEY = private.SECRET_KEY
