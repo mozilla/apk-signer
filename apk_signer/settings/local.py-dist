@@ -45,3 +45,27 @@ HAWK_CREDENTIALS['apk-factory']['key'] = ''
 AWS_ACCESS_KEY = ''
 AWS_SECRET_KEY = ''
 S3_BUCKET = 'mozilla-apk-cache-YOUR-NAME'
+S3_BUCKET_KEYS = "mozilla-apk-keys-YOUR-NAME"
+
+# Various options for the signing process.
+# The default testing value is the RHS
+#
+# Path to the keytool and jarsigner executables
+#APK_SIGN_JAVA_CLI_PATH = ""
+# Where to store temporary files for keystore manipulation
+#APK_SIGNER_KEYS_TEMP_DIR = tempfile.gettempdir()
+# The password for all PKCS12 files
+#APK_SIGNER_STORE_PASSWD = mozilla
+# How long is each generated self signed certificate valid for
+#APK_SIGNER_VALIDITY_PERIOD = 3650 (10 years)
+# Type of key to use to sign the APK manifest
+#APK_SIGNER_APP_KEY_ALGO = RSA
+# Length of the generated key in bits
+#APK_SIGNER_APP_KEY_LENGTH = 2048
+# Weird string that names the algo to use to sign the APK manifest.
+# See http://docs.oracle.com/javase/7/docs/api/java/security/Signature.html
+# Even though that page says SHA256withRSA is required, keytool and
+# jarsigner both throw an error in my test environment
+#APK_SIGNER_SIGN_SIG_ALGO = SHA1withRSA
+# Digest algorithm to use on the APK manifest to generate signatures
+#APK_SIGNER_SIGN_DIGEST_ALGO = SHA1
