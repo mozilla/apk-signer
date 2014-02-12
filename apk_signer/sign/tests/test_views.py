@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from cStringIO import StringIO
 import hashlib
+import tempfile
 
 from django.core.urlresolvers import reverse
 
@@ -17,11 +18,20 @@ class SignTestBase(TestCase):
         self.signed_path = '/path/to/signed/file.apk'
         self.file_hash = 'maybe'
 
+        p = mock.patch('apk_signer.sign.views.signer')
+        self.signer = p.start()
+        self.addCleanup(p.stop)
+
+        tmp = tempfile.NamedTemporaryFile()
+        self.signer.sign.return_value = tmp
+        self.addCleanup(tmp.close)
+
     def data(self):
         return {
             'unsigned_apk_s3_path': self.key_path,
             'unsigned_apk_s3_hash': self.file_hash,
             'signed_apk_s3_path': self.signed_path,
+            'apk_id': 'id_derived_from_manifest',
         }
 
     def post(self, data=None):
@@ -44,6 +54,11 @@ class TestSignView(SignTestBase):
     def test_missing_s3_signed_path(self):
         data = self.data()
         del data['signed_apk_s3_path']
+        eq_(self.post(data).status_code, 400)
+
+    def test_missing_apk_id(self):
+        data = self.data()
+        del data['apk_id']
         eq_(self.post(data).status_code, 400)
 
 
@@ -69,7 +84,7 @@ class TestSignedStorage(SignTestBase):
 
     def test_fetch_ok(self):
         self.post()
-        self.get_apk.assert_called_with(self.key_path)
+        self.get_apk.assert_called_with(self.key_path, prefix=mock.ANY)
 
     def test_put_ok(self):
         self.post()

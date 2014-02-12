@@ -8,7 +8,8 @@ from rest_framework.response import Response
 
 from apk_signer.base import APIView
 from apk_signer.exceptions import BadRequestError
-from apk_signer import signing, storage
+from apk_signer.sign import signer
+from apk_signer import storage
 
 
 buf_size = 1024 * 1024  # 1MB buffer
@@ -16,8 +17,7 @@ log = getLogger(__name__)
 
 
 class SignForm(ParanoidForm):
-    # TODO: validate chars for Amazon S3 key compatibility.
-    apk_id = forms.CharField()
+    apk_id = forms.CharField(max_length=1024)
     unsigned_apk_s3_path = forms.CharField()
     unsigned_apk_s3_hash = forms.CharField()
     signed_apk_s3_path = forms.CharField()
@@ -49,8 +49,8 @@ class SignView(APIView):
                 raise BadRequestError('unsigned APK content '
                                       'hash check failed')
 
-            with signing.sign(form.cleaned_data['apk_id'],
-                              fp) as signed_fp:
+            with signer.sign(form.cleaned_data['apk_id'],
+                             fp) as signed_fp:
                 storage.put_signed_apk(signed_fp, dest)
 
         return Response({'signed_apk_s3_url': 'not implemented'})
