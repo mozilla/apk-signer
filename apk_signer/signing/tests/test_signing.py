@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import base64
+import os
 import shutil
 import subprocess
 import tempfile
@@ -75,19 +76,19 @@ class TestSigning(TestCase):
                    "O=Mozilla Marketplace, L=Mountain View, ST=California, "
                    "C=US".format(id=self.apk_id))
 
-        # TODO: set up temp file for key stores.
-
-        # TODO: Cache this as a test asset for speed.
-        self.keystore = signing.gen_keystore(self.apk_id)
-
         p = mock.patch('apk_signer.signing.storage')
         self.stor = p.start()
         self.addCleanup(p.stop)
 
+    def open_keystore(self):
+        kf = open(asset('test.keystore'), 'rb')
+        self.addCleanup(kf.close)
+        return kf
+
     def test_generate(self):
         raise SkipTest
         key_fp = signing.generate(self.testurl)
-        args - ['keytool', '-printcert',
+        args = ['keytool', '-printcert',
                 '-storetype', 'pkcs12',
                 '-storepass', 'mozilla'
                 '-alias', '0',
@@ -106,9 +107,7 @@ class TestSigning(TestCase):
         pass
 
     def test_sign_and_verify(self):
-        kf = open(self.keystore, 'rb')
-        self.stor.get_app_key.return_value = kf
-        self.addCleanup(kf.close)
+        self.stor.get_app_key.return_value = self.open_keystore()
 
         with tempfile.NamedTemporaryFile(prefix='test_sign_',
                                          suffix='.apk') as apk:
@@ -125,3 +124,7 @@ class TestSigning(TestCase):
             signed_fp.seek(0)
             output = signing.jarsigner(['-verify', '-verbose', signed_fp.name])
             assert output.strip().endswith('jar verified.'), output
+
+
+def asset(fn):
+    return os.path.join(os.path.dirname(__file__), 'assets', fn)
