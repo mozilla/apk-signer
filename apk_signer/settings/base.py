@@ -250,7 +250,7 @@ S3_BUCKET = 'mozilla-apk-cache-local'
 # Path to the keytool and jarsigner executables
 # If left blank, `keytool` will be executed with no prefix
 # (i.e. using $PATH)
-APK_SIGN_JAVA_CLI_PATH = ''
+APK_SIGNER_JAVA_CLI_PATH = ''
 
 # Where to store temporary files for keystore manipulation
 APK_SIGNER_KEYS_TEMP_DIR = tempfile.gettempdir()

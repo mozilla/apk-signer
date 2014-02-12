@@ -43,6 +43,10 @@ Endpoints
 
     **Request**
 
+    :param apk_id:
+        A unique identifier for this APK such as one derived from a webapp
+        manifest URL. This value will be used as an Amazon S3 storage key.
+
     :param unsigned_apk_s3_path:
         An Amazon S3 path (in a shared bucket) to the unsigned
         APK file that should be fetched and signed.

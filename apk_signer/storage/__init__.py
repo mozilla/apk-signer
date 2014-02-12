@@ -19,7 +19,7 @@ def bucket(conn=None, name=None):
     return conn.get_bucket(name)
 
 
-def get_apk(key_path, conn=None, suffix='.apk', bkt_name=None):
+def get_apk(key_path, conn=None, suffix='.apk', bkt_name=None, prefix=None):
     if not conn:
         conn = connect()
 
@@ -29,9 +29,11 @@ def get_apk(key_path, conn=None, suffix='.apk', bkt_name=None):
         # TODO: maybe add a retry loop here if we hit this error a lot.
         raise NoSuchKey('Key {path} does not exist in {bkt}'
                         .format(path=key_path, bkt=bkt))
-    fp = tempfile.NamedTemporaryFile(suffix=suffix)
+    fp = tempfile.NamedTemporaryFile(suffix=suffix, prefix=prefix)
     key.get_contents_to_file(fp)
 
+    fp.flush()
+    fp.seek(0)
     return fp
 
 
