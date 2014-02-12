@@ -6,14 +6,15 @@ import os
 import os.path
 import subprocess
 import tempfile
+import uuid
 
 from django.conf import settings
 
 from apk_signer import storage
+from apk_signer.storage import AppKeyAlreadyExists, NoSuchKey
 
 
 class SigningError(Exception):
-    # FIXME Add stderr for failed subprocess calls
     """Encapsulates all signing errors"""
 
 
@@ -42,10 +43,11 @@ def gen_keystore(apk_id):
              "L=Mountain View",
              "ST=California",
              "C=US"]
-    # TODO: make keystore a named tempfile.
-    keystore = os.path.join(settings.APK_SIGNER_KEYS_TEMP_DIR, apk_id)
-    args = [os.path.join(settings.APK_SIGNER_JAVA_CLI_PATH, "keytool"),
-            '-genkey',
+
+    # TODO: delete keystores after use!
+    keystore = os.path.join(settings.APK_SIGNER_KEYS_TEMP_DIR,
+                            'gen_keystore_{u}'.format(u=uuid.uuid4()))
+    args = ['-genkey',
             '-keystore', keystore,
             '-storepass', getattr(settings, 'APK_SIGNER_STORE_PASSWD',
                                   'mozilla'),
@@ -58,22 +60,11 @@ def gen_keystore(apk_id):
             '-storetype', 'pkcs12',
             '-dname', ', '.join(dname)]
 
-    # Capture stdout and stderr for logging because Java or keytool seems to be
-    # inconsistent about which it writes error messages to.
-    # TODO: switch to using subprocess pipes.
-    stderr, stdout = tempfile.TemporaryFile(), tempfile.TemporaryFile()
-    rc = subprocess.call(args, stderr=stderr, stdout=stdout)
-    if rc != 0:
-        stdout.seek(0)
-        stderr.seek(0)
-        raise SigningError("Failed to generate key: ID: {id}\n"
-                           "STDOUT: {stdout}\n"
-                           "STDERR: {stderr}\n"
-                           .format(id=apk_id,
-                                   stderr=stderr.read(),
-                                   stdout=stdout.read()))
-    stderr.close()
-    stdout.close()
+    try:
+        keytool(args)
+    except KeytoolError, exc:
+        raise SigningError("Failed to generate key: ID {id}: {exc}"
+                           .format(id=apk_id, exc=exc))
 
     # We should really verify that the certificate in the keystore has the
     # dname that we expect but there's no quick way to do that with the Java
@@ -83,37 +74,32 @@ def gen_keystore(apk_id):
 
 
 def make_keystore(apk_id):
-    keystore = gen_keystore(apk_id)
-
-    # Store key in S3
-    # TODO: yield file so that file handle gets closed.
-    fp = open(keystore, 'rb')
+    fp = open(gen_keystore(apk_id), 'rb')
     try:
         storage.put_app_key(fp, apk_id)
-    except storage.AppKeyAlreadyExists, e:
-        raise SigningError("Collision when generating key for ID {id}: {exc}"
-                           .format(id=apk_id, exc=e))
-
+    except AppKeyAlreadyExists, e:
+        raise SigningError("Collision when generating key for ID {id}: "
+                           "{exc}".format(id=apk_id, exc=e))
+    fp.seek(0)
     return fp
 
 
-def lookup(apk_id):
+def get_keystore(apk_id):
     """
-    Looks in S3 for an existing key for the manifest URL.  If not found,
-    generates a new one, stores in S3, and then attempts fetches from S3.
+    Returns an open file object for a key store.
+    A keystore will be generated and saved to S3 if it doesn't exist.
     """
     try:
         return storage.get_app_key(apk_id)
-    except storage.NoSuchKey:
-        make_keystore(apk_id)
-        return lookup(apk_id)
+    except NoSuchKey:
+        return make_keystore(apk_id)
 
 
 def sign(apk_id, apk_fp):
     """
     Signs the JAR file provided by apk_fp.name via the jarsigner CLI
     """
-    key_fp = lookup(apk_id)
+    key_fp = get_keystore(apk_id)
     signed_fp = tempfile.NamedTemporaryFile(prefix='signed_', suffix='.apk')
     args = ['-sigalg', settings.APK_SIGNER_SIGN_SIG_ALGO,
             '-digestalg', settings.APK_SIGNER_SIGN_DIGEST_ALGO,
@@ -133,17 +119,36 @@ def sign(apk_id, apk_fp):
     return signed_fp
 
 
+def keytool(args):
+    args.insert(0, os.path.join(settings.APK_SIGNER_JAVA_CLI_PATH,
+                                'keytool'))
+    sp, output = cmd(args)
+    if sp.returncode != 0:
+        raise KeytoolError('{prog} failed: {out}\n'
+                           .format(prog=args[0], out=output))
+    return output
+
+
 def jarsigner(args):
     args.insert(0, os.path.join(settings.APK_SIGNER_JAVA_CLI_PATH,
                                 'jarsigner'))
-    sp = subprocess.Popen(args, stderr=subprocess.STDOUT,
-                          stdout=subprocess.PIPE)
-    output, _ = sp.communicate()
+    sp, output = cmd(args)
     if sp.returncode != 0:
         raise JarSignerError('{prog} failed: {out}\n'
                              .format(prog=args[0], out=output))
     return output
 
 
+def cmd(args):
+    sp = subprocess.Popen(args, stderr=subprocess.STDOUT,
+                          stdout=subprocess.PIPE)
+    output, _ = sp.communicate()
+    return sp, output
+
+
 class JarSignerError(Exception):
+    pass
+
+
+class KeytoolError(Exception):
     pass

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import base64
+from contextlib import contextmanager
 import os
 import shutil
-import subprocess
 import tempfile
 import zipfile
 from zipfile import ZipFile
@@ -10,10 +10,11 @@ from zipfile import ZipFile
 from django.conf import settings
 
 from apk_signer.base.tests import TestCase
+from apk_signer.storage import AppKeyAlreadyExists, NoSuchKey
 from apk_signer.sign import signer
+from apk_signer.sign.signer import SigningError
 
 import mock
-from nose.exc import SkipTest
 
 
 PIXEL_GIF = 'R0lGODlhAQABAJH/AP///wAAAP///wAAACH/C0FET0JFOklSMS4wAt7tACH5BAEAAAIALAAAAAABAAEAAAICVAEAOw=='
@@ -57,7 +58,7 @@ MANIFEST = """{
 """
 
 
-class TestSigning(TestCase):
+class Base(TestCase):
 
     def setUp(self):
         tmp = tempfile.mkdtemp(prefix='tmp_apk_signer_test_')
@@ -84,32 +85,11 @@ class TestSigning(TestCase):
         self.addCleanup(kf.close)
         return kf
 
-    def test_generate(self):
-        raise SkipTest
-        key_fp = signer.generate(self.testurl)
-        args = ['keytool', '-printcert',
-                '-storetype', 'pkcs12',
-                '-storepass', 'mozilla'
-                '-alias', '0',
-                '-keystore', key_fp.name]
-
-        stdout = tempfile.TemporaryFile()
-        rc = subprocess.call(args, stdout=stdout)
-        self.assertFalse(rc)
-
-        stdout.seek(0)
-        for line in stdout:
-            if line.startsith("Owner:"):
-                self.assertEqual(line.strip(), "Owner: " + self.dn)
-
-    def test_lookup(self):
-        pass
-
-    def test_sign_and_verify(self):
-        self.stor.get_app_key.return_value = self.open_keystore()
-
+    @contextmanager
+    def unsigned_apk(self):
         with tempfile.NamedTemporaryFile(prefix='test_sign_',
                                          suffix='.apk') as apk:
+            # Create something signable. Pretend this is an unsigned APK.
             z = ZipFile(apk, 'w', zipfile.ZIP_DEFLATED)
             z.writestr("index.html", "")
             z.writestr("manifest.webapp", MANIFEST)
@@ -118,11 +98,37 @@ class TestSigning(TestCase):
             z.close()
             apk.seek(0)
 
+            yield apk
+
+
+class TestSigning(Base):
+
+    def test_sign_and_verify(self):
+        self.stor.get_app_key.return_value = self.open_keystore()
+
+        with self.unsigned_apk() as apk:
             signed_fp = signer.sign(self.apk_id, apk)
 
             signed_fp.seek(0)
             output = signer.jarsigner(['-verify', '-verbose', signed_fp.name])
             assert output.strip().endswith('jar verified.'), output
+
+    @mock.patch('apk_signer.sign.signer.jarsigner')
+    def test_no_keystore(self, jarsigner):
+        self.stor.get_app_key.side_effect = NoSuchKey
+
+        with self.unsigned_apk() as apk:
+            signer.sign(self.apk_id, apk)
+
+        # Asset key store is saved.
+        self.stor.put_app_key.assert_called_with(mock.ANY, self.apk_id)
+
+    @mock.patch('apk_signer.sign.signer.gen_keystore')
+    def test_collision(self, gen_keystore):
+        gen_keystore.return_value = self.open_keystore().name
+        self.stor.put_app_key.side_effect = AppKeyAlreadyExists
+        with self.assertRaises(SigningError):
+            signer.make_keystore(self.apk_id)
 
 
 def asset(fn):
