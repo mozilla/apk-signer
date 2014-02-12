@@ -10,11 +10,10 @@ from zipfile import ZipFile
 from django.conf import settings
 
 from apk_signer.base.tests import TestCase
+from apk_signer.sign import signer
 
 import mock
 from nose.exc import SkipTest
-
-from apk_signer import signing
 
 
 PIXEL_GIF = 'R0lGODlhAQABAJH/AP///wAAAP///wAAACH/C0FET0JFOklSMS4wAt7tACH5BAEAAAIALAAAAAABAAEAAAICVAEAOw=='
@@ -76,7 +75,7 @@ class TestSigning(TestCase):
                    "O=Mozilla Marketplace, L=Mountain View, ST=California, "
                    "C=US".format(id=self.apk_id))
 
-        p = mock.patch('apk_signer.signing.storage')
+        p = mock.patch('apk_signer.sign.signer.storage')
         self.stor = p.start()
         self.addCleanup(p.stop)
 
@@ -87,7 +86,7 @@ class TestSigning(TestCase):
 
     def test_generate(self):
         raise SkipTest
-        key_fp = signing.generate(self.testurl)
+        key_fp = signer.generate(self.testurl)
         args = ['keytool', '-printcert',
                 '-storetype', 'pkcs12',
                 '-storepass', 'mozilla'
@@ -119,10 +118,10 @@ class TestSigning(TestCase):
             z.close()
             apk.seek(0)
 
-            signed_fp = signing.sign(self.apk_id, apk)
+            signed_fp = signer.sign(self.apk_id, apk)
 
             signed_fp.seek(0)
-            output = signing.jarsigner(['-verify', '-verbose', signed_fp.name])
+            output = signer.jarsigner(['-verify', '-verbose', signed_fp.name])
             assert output.strip().endswith('jar verified.'), output
 
 
