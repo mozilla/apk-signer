@@ -19,7 +19,7 @@ def bucket(conn=None, name=None):
     return conn.get_bucket(name)
 
 
-def get_apk(key_path, conn=None, suffix='.apk', bkt_name=None, prefix=None):
+def get_apk(key_path, conn=None, suffix='.apk', bkt_name=None, prefix='tmp'):
     if not conn:
         conn = connect()
 
