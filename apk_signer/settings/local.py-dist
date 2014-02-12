@@ -45,4 +45,3 @@ HAWK_CREDENTIALS['apk-factory']['key'] = ''
 AWS_ACCESS_KEY = ''
 AWS_SECRET_KEY = ''
 S3_BUCKET = 'mozilla-apk-cache-YOUR-NAME'
-S3_BUCKET_KEYS = "mozilla-apk-keys-YOUR-NAME"
