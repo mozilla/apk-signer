@@ -25,3 +25,5 @@ S3_KEY_BUCKET = private.S3_KEY_BUCKET
 LOGGING = base_settings.LOGGING.copy()
 LOGGING['loggers']['mohawk']['level'] = 'DEBUG'
 LOGGING['loggers']['boto']['level'] = 'DEBUG'
+
+APK_SIGNER_STORE_PASSWD = private.APK_SIGNER_STORE_PASSWD
