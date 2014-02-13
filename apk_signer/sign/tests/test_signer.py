@@ -131,5 +131,15 @@ class TestSigning(Base):
             signer.make_keystore(self.apk_id)
 
 
+class TestFindExecutable(TestCase):
+
+    def test_missing(self):
+        with self.assertRaises(EnvironmentError):
+            signer.find_executable('nope')
+
+    def test_ok(self):
+        signer.find_executable('keytool')
+
+
 def asset(fn):
     return os.path.join(os.path.dirname(__file__), 'assets', fn)

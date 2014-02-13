@@ -47,18 +47,18 @@ def gen_keystore(apk_id):
     # TODO: delete keystores after use!
     keystore = os.path.join(settings.APK_SIGNER_KEYS_TEMP_DIR,
                             'gen_keystore_{u}'.format(u=uuid.uuid4()))
-    args = ['-genkey',
-            '-keystore', keystore,
-            '-storepass', getattr(settings, 'APK_SIGNER_STORE_PASSWD',
-                                  'mozilla'),
-            '-alias', '0',
-            '-validity', str(int(getattr(settings, 'APK_SIGNER_VALIDITY_PERIOD',
-                                         365 * 10))),
-            '-keyalg', getattr(settings, 'APK_SIGNER_APP_KEY_ALGO', 'RSA'),
-            '-keysize', str(int(getattr(settings, 'APK_SIGNER_APP_KEY_LENGTH',
-                                        2048))),
-            '-storetype', 'pkcs12',
-            '-dname', ', '.join(dname)]
+    args = [
+        '-genkey',
+        '-keystore', keystore,
+        '-storepass', settings.APK_SIGNER_STORE_PASSWD,
+        '-alias', '0',
+        '-validity', str(int(getattr(settings, 'APK_SIGNER_VALIDITY_PERIOD',
+                                     365 * 10))),
+        '-keyalg', getattr(settings, 'APK_SIGNER_APP_KEY_ALGO', 'RSA'),
+        '-keysize', str(int(getattr(settings, 'APK_SIGNER_APP_KEY_LENGTH',
+                                    2048))),
+        '-storetype', 'pkcs12',
+        '-dname', ', '.join(dname)]
 
     try:
         keytool(args)
@@ -119,9 +119,21 @@ def sign(apk_id, apk_fp):
     return signed_fp
 
 
+def find_executable(name):
+    path = os.path.join(settings.APK_SIGNER_JAVA_CLI_PATH, name)
+    if os.path.exists(path):
+        return path
+    for p in os.environ['PATH'].split(':'):
+        # Don't actually build a new path, just check to make sure we got it.
+        if os.path.exists(os.path.join(p, name)):
+            return name
+    raise EnvironmentError(
+        'Cannot find executable "{name}" on $PATH or in '
+        'settings.APK_SIGNER_JAVA_CLI_PATH'.format(name=name))
+
+
 def keytool(args):
-    args.insert(0, os.path.join(settings.APK_SIGNER_JAVA_CLI_PATH,
-                                'keytool'))
+    args.insert(0, find_executable('keytool'))
     sp, output = cmd(args)
     if sp.returncode != 0:
         raise KeytoolError('{prog} failed: {out}\n'
@@ -130,8 +142,7 @@ def keytool(args):
 
 
 def jarsigner(args):
-    args.insert(0, os.path.join(settings.APK_SIGNER_JAVA_CLI_PATH,
-                                'jarsigner'))
+    args.insert(0, find_executable('jarsigner'))
     sp, output = cmd(args)
     if sp.returncode != 0:
         raise JarSignerError('{prog} failed: {out}\n'

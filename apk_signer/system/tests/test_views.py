@@ -53,3 +53,18 @@ class TestStatsView(TestCase):
     def test(self, statsd):
         self.assert2x(self.client.get(reverse('system.stats')))
         assert statsd.incr.called
+
+
+class TestToolsView(TestCase):
+
+    def test_ok(self):
+        res = self.json(self.client.get(reverse('system.tools')))
+        eq_(res['success'], True)
+        eq_(res['msg'], {'keytool': 'ok', 'jarsigner': 'ok'})
+
+    @patch('apk_signer.sign.signer.find_executable')
+    def test_not_ok(self, find_executable):
+        find_executable.side_effect = EnvironmentError
+        res = self.json(self.client.get(reverse('system.tools')))
+        eq_(res['success'], False)
+        eq_(res['msg'], {'keytool': 'MISSING', 'jarsigner': 'MISSING'})
