@@ -2,7 +2,6 @@ import tempfile
 
 from django.conf import settings
 
-import boto
 from boto.s3.connection import S3Connection
 
 
@@ -24,13 +23,9 @@ def signed_apk_url(key_path, conn=None):
     bkt = bucket(settings.S3_APK_BUCKET, conn=conn)
     key = bkt.get_key(key_path)
 
-    fmt = boto.config.get(
-        's3', 'calling_format',
-        'boto.s3.connection.SubdomainCallingFormat')
-    calling_fmt = boto.utils.find_class(fmt)()
-    return calling_fmt.build_url_base(conn, 'https',
-                                      conn.server_name(443),
-                                      bkt.name, key.name)
+    return 'https://{host}/{bucket}/{key}'.format(host=conn.server_name(),
+                                                  bucket=bkt.name,
+                                                  key=key.name)
 
 
 def get_apk(key_path, conn=None):
