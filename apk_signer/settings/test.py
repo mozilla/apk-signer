@@ -25,7 +25,7 @@ LOGGING['loggers']['mohawk']['level'] = 'DEBUG'
 
 APK_SIGNER_STORE_PASSWD = 'keytool password just for testing'
 
-# Safety measure to make sure setUp() creates a temp dir correctly.
+# Safety measure to make sure setUp() resets this setting correctly.
 APK_SIGNER_KEYS_TEMP_DIR = '/nowhere/dont/even/try'
 
 # Find these on $PATH
