@@ -27,3 +27,4 @@ LOGGING['loggers']['mohawk']['level'] = 'DEBUG'
 LOGGING['loggers']['boto']['level'] = 'DEBUG'
 
 APK_SIGNER_STORE_PASSWD = private.APK_SIGNER_STORE_PASSWD
+APK_SIGNER_KEYS_TEMP_DIR = private.APK_SIGNER_KEYS_TEMP_DIR
