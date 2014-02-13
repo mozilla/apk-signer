@@ -77,6 +77,9 @@ class TestSignedStorage(SignTestBase):
         self.get_apk = storage.get_apk
         self.put_signed_apk = storage.put_signed_apk
 
+        self.stor = storage
+        self.stor.signed_apk_url.return_value = '<url>'
+
         content = '<pretend this is APK data>'
         self.file_hash = hashlib.sha256(content).hexdigest()
         buf = self.buf(content)
@@ -84,11 +87,14 @@ class TestSignedStorage(SignTestBase):
 
     def test_fetch_ok(self):
         self.post()
-        self.get_apk.assert_called_with(self.key_path, prefix=mock.ANY)
+        self.get_apk.assert_called_with(self.key_path)
 
     def test_put_ok(self):
-        self.post()
+        url = '<apk_url>'
+        self.stor.signed_apk_url.return_value = url
+        res = self.json(self.post())
         self.put_signed_apk.assert_called_with(mock.ANY, self.signed_path)
+        eq_(res['signed_apk_s3_url'], url)
 
     def test_hash_fail(self):
         data = self.data()

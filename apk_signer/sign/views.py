@@ -37,7 +37,7 @@ class SignView(APIView):
                  .format(src=src, dest=dest,
                          id=form.cleaned_data['apk_id']))
 
-        with storage.get_apk(src, prefix='unsigned_') as fp:
+        with storage.get_apk(src) as fp:
             real_hash = checksum_hash(fp)
             claimed_hash = form.cleaned_data['unsigned_apk_s3_hash']
             log.info('Unsigned APK hash check: '
@@ -53,7 +53,7 @@ class SignView(APIView):
                              fp) as signed_fp:
                 storage.put_signed_apk(signed_fp, dest)
 
-        return Response({'signed_apk_s3_url': 'not implemented'})
+        return Response({'signed_apk_s3_url': storage.signed_apk_url(dest)})
 
 
 def checksum_hash(fp, buf_size=buf_size):
