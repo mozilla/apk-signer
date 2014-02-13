@@ -21,10 +21,8 @@ The following credentials are defined for use:
 **apk-factory**
     The APK Factory will communicate with the signing service to sign APKs.
     All incoming requests to the signer must be signed with these
-    credentials.
-
-**apk-signer**
-    All outgoing signer responses are signed with these credentials.
+    credentials. As per Hawk, the server signs its response using the same
+    credentials that the request was signed with.
 
 .. _Hawk: https://github.com/hueniverse/hawk
 
