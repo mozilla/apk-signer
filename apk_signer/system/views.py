@@ -3,6 +3,7 @@ from commonware.log import getLogger
 from rest_framework.response import Response
 
 from apk_signer.base import APIView, log_cef, UnprotectedAPIView
+from apk_signer.exceptions import ConflictError
 from apk_signer.sign import signer
 
 
@@ -63,4 +64,9 @@ class ToolsView(UnprotectedAPIView):
                 result = 'MISSING'
             msg[name] = result
 
-        return Response({'success': ok, 'msg': msg})
+        res = {'success': ok, 'msg': msg}
+        if not ok:
+            raise ConflictError(res)
+        else:
+            # Make the return format compatible with exceptions.
+            return Response({'detail': res})
