@@ -21,10 +21,8 @@ The following credentials are defined for use:
 **apk-factory**
     The APK Factory will communicate with the signing service to sign APKs.
     All incoming requests to the signer must be signed with these
-    credentials.
-
-**apk-signer**
-    All outgoing signer responses are signed with these credentials.
+    credentials. As per Hawk, the server signs its response using the same
+    credentials that the request was signed with.
 
 .. _Hawk: https://github.com/hueniverse/hawk
 
@@ -42,6 +40,10 @@ Endpoints
     parameters.
 
     **Request**
+
+    :param apk_id:
+        A unique identifier for this APK such as one derived from a webapp
+        manifest URL. This value will be used as an Amazon S3 storage key.
 
     :param unsigned_apk_s3_path:
         An Amazon S3 path (in a shared bucket) to the unsigned

@@ -3,6 +3,8 @@ from commonware.log import getLogger
 from rest_framework.response import Response
 
 from apk_signer.base import APIView, log_cef, UnprotectedAPIView
+from apk_signer.exceptions import ConflictError
+from apk_signer.sign import signer
 
 
 log = getLogger(__name__)
@@ -45,3 +47,26 @@ class TraceView(UnprotectedAPIView):
     def post(self, request):
         raise RuntimeError(
             'This is a synthetic exception. Carry on, nothing to see')
+
+
+class ToolsView(UnprotectedAPIView):
+
+    def get(self, request):
+        ok = True
+        msg = {}
+        for name in ('keytool', 'jarsigner'):
+            result = 'ok'
+            try:
+                signer.find_executable(name)
+            except EnvironmentError:
+                log.exception('could not find executable {n}'.format(n=name))
+                ok = False
+                result = 'MISSING'
+            msg[name] = result
+
+        res = {'success': ok, 'msg': msg}
+        if not ok:
+            raise ConflictError(res)
+        else:
+            # Make the return format compatible with exceptions.
+            return Response({'detail': res})

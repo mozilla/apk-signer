@@ -61,7 +61,12 @@ class Command(BaseCommand):
 
         # Verify we're talking to our trusted server.
         print res.headers
-        sender.accept_response(res.headers['Server-Authorization'],
-                               content=res.text,
-                               content_type=res.headers['Content-Type'])
-        print '<response was Hawk verified>'
+        auth_hdr = res.headers.get('Server-Authorization', None)
+        if auth_hdr:
+            sender.accept_response(auth_hdr,
+                                   content=res.text,
+                                   content_type=res.headers['Content-Type'])
+            print '<response was Hawk verified>'
+        else:
+            print '** NO Server-Authorization header **'
+            print '<response was NOT Hawk verified>'
