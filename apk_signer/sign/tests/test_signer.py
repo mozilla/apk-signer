@@ -119,7 +119,8 @@ class TestSigning(Base):
                     break
                 buf.append(ln)
 
-            assert buf[-1] == 'jar verified.', '\n'.join(buf)
+            buf = '\n'.join(buf)
+            assert buf.strip().endswith('jar verified.'), buf
 
     @mock.patch('apk_signer.sign.signer.jarsigner')
     def test_no_keystore(self, jarsigner):
