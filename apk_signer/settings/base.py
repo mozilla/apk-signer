@@ -241,7 +241,11 @@ AWS_SECRET_KEY = ''
 
 # Name of S3 bucket where all signed/unsigned APKs are stored.
 # This bucket must already exist.
-S3_BUCKET = 'mozilla-apk-cache-local'
+S3_APK_BUCKET = 'mozilla-apk-cache-local'
+
+# Name of S3 bucket where all key stores are kept.
+# This bucket must already exist.
+S3_KEY_BUCKET = 'mozilla-apk-keys-local'
 
 
 # Various options for the signing process.
