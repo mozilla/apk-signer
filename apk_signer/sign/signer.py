@@ -66,6 +66,7 @@ def gen_keystore(apk_id):
         raise SigningError("Failed to generate key: ID {id}: {exc}"
                            .format(id=apk_id, exc=exc))
 
+    # TODO: verify cert.
     # We should really verify that the certificate in the keystore has the
     # dname that we expect but there's no quick way to do that with the Java
     # command line tools.  It should be easily possible with M2Crypto but I'm
