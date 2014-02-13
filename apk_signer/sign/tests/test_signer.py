@@ -111,7 +111,15 @@ class TestSigning(Base):
 
             signed_fp.seek(0)
             output = signer.jarsigner(['-verify', '-verbose', signed_fp.name])
-            assert output.strip().endswith('jar verified.'), output
+
+            buf = []
+            for ln in output.splitlines():
+                if ln.startswith('Warning:'):
+                    # Strip out all trailing warnings.
+                    break
+                buf.append(ln)
+
+            assert buf[-1] == 'jar verified.', '\n'.join(buf)
 
     @mock.patch('apk_signer.sign.signer.jarsigner')
     def test_no_keystore(self, jarsigner):
