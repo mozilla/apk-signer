@@ -21,3 +21,7 @@ AWS_SECRET_KEY = private.AWS_SECRET_KEY
 
 S3_APK_BUCKET = private.S3_APK_BUCKET
 S3_KEY_BUCKET = private.S3_KEY_BUCKET
+
+LOGGING = base_settings.LOGGING.copy()
+LOGGING['loggers']['mohawk']['level'] = 'DEBUG'
+LOGGING['loggers']['boto']['level'] = 'DEBUG'
