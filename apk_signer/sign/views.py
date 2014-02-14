@@ -1,6 +1,7 @@
 import hashlib
 
 from django import forms
+from django.conf import settings
 
 from django_paranoia.forms import ParanoidForm
 from commonware.log import getLogger
@@ -21,6 +22,13 @@ class SignForm(ParanoidForm):
     unsigned_apk_s3_path = forms.CharField()
     unsigned_apk_s3_hash = forms.CharField()
     signed_apk_s3_path = forms.CharField()
+
+    def clean_unsigned_apk_s3_path(self):
+        key = self.cleaned_data['unsigned_apk_s3_path']
+        if not storage.bucket_key_exists(settings.S3_KEY_BUCKET, key):
+            raise forms.ValidationError(
+                'unsigned APK key {k} does not exist on S3'.format(k=key))
+        return key
 
 
 class SignView(APIView):

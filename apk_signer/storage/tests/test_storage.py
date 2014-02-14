@@ -3,6 +3,7 @@ import tempfile
 from apk_signer.base.tests import TestCase
 
 import mock
+from nose.tools import eq_
 
 from apk_signer import storage
 from apk_signer.storage import NoSuchKey
@@ -24,6 +25,16 @@ class TestStorage(TestCase):
         self.bkt.get_key.return_value = self.key
         self.new_key = mock.Mock()
         self.bkt.new_key.return_value = self.new_key
+
+    def test_bucket_key_does_not_exist(self):
+        self.bkt.get_key.return_value = None
+        eq_(storage.bucket_key_exists('some-bucket', 'some-key'),
+            False)
+
+    def test_bucket_key_exists(self):
+        self.bkt.get_key.return_value = '<some key>'
+        eq_(storage.bucket_key_exists('some-bucket', 'some-key'),
+            True)
 
     def test_get_apk(self):
         storage.get_apk(self.key_path)
