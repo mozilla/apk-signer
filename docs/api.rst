@@ -6,13 +6,16 @@ Here is the web API offered by the APK Signer.
 Here are some URLs where you can find a deployed APK Signer:
 
 **production**
-    https://apk-signer.mozilla.org
+    TBD
 
 **stage**
-    https://apk-signer.allizom.org
+    https://apk-signer.stage.mozaws.net/
 
-Authentication
-==============
+
+All APIs accept standard ``application/x-www-form-urlencoded`` POST parameters.
+
+Authorization
+=============
 
 All incoming and outgoing requests are secured by a `Hawk`_ shared key.
 The setting ``HAWK_CREDENTIALS`` is a dictionary of consumers and credentials.
@@ -24,11 +27,16 @@ The following credentials are defined for use:
     credentials. As per Hawk, the server signs its response using the same
     credentials that the request was signed with.
 
-.. _Hawk: https://github.com/hueniverse/hawk
+All Hawk requests must sign their request payload (request body plus request
+content-type). If both of these are blank, such as in a GET request,
+you must sign them as empty strings.
 
-Endpoints
-=========
+Authorized API requests will respond with a Hawk header that signs the response,
+including payload. For the best security, make sure your client is
+authorizing incoming Hawk responses.
 
+Signer
+======
 
 .. http:post:: /sign
 
@@ -36,8 +44,6 @@ Endpoints
     has been signed with an Android key store.
     This signing process works just like the standard
     `Android signing process`_.
-    This API accepts standard ``application/x-www-form-urlencoded`` POST
-    parameters.
 
     **Request**
 
@@ -68,12 +74,131 @@ Endpoints
 
     .. code-block:: json
 
-        {
-            "signed_apk_s3_url": "https://amazon-s3/path/to/signed/file.apk",
-        }
+        {"signed_apk_s3_url": "https://s3.amazonaws.com/bucket/key/to/signed.apk"}
 
     :status 200: success.
     :status 400: request was invalid.
-    :status 401: authentication error.
+    :status 403: authentication error.
 
 .. _`Android signing process`: http://developer.android.com/tools/publishing/app-signing.html
+
+System
+======
+
+There are some system APIs you can use to monitor the health of the APK Signer
+system.
+
+
+.. http:get:: /system/auth
+
+    This endpoint lets you test your `Hawk`_ client to see that you are making
+    authorized GET requests correctly.
+
+.. http:post:: /system/auth
+
+    You can also POST to the same endpoint to test an authorized Hawk request.
+
+    **Response**
+
+    Example response to GET:
+
+    .. code-block:: json
+
+        {"message": "GET authentication successful"}
+
+    Example response to POST:
+
+    .. code-block:: json
+
+        {"message": "POST authentication successful"}
+
+    :status 200: success.
+    :status 403: authentication error.
+
+
+.. http:get:: /system/cef
+
+    A request to this endpoint will log an internal CEF
+    (Common Event Format) message.
+    This will let you test that the system is hooked up for CEF logging.
+
+    **Response**
+
+    Example:
+
+    .. code-block:: json
+
+        {"message": "CEF messages sent"}
+
+    :status 200: success.
+
+
+.. http:get:: /system/log
+
+    A request to this endpoint will send a test message to the
+    internal logging system.
+    This will let you test that the system is hooked up for logging.
+
+    **Response**
+
+    Example:
+
+    .. code-block:: json
+
+        {'message': 'messages logged on server'}
+
+    :status 200: success.
+
+
+.. http:get:: /system/stats
+
+    A request to this endpoint will increment a `statsd`_ key for testing
+    purposes.
+
+    **Response**
+
+    Example:
+
+    .. code-block:: json
+
+        {"message": "apk_signer.system_check incremented"}
+
+    :status 200: success.
+
+
+.. http:get:: /system/tools
+
+    This endpoint reports whether or not the required command line tools are
+    available.
+
+    **Response**
+
+    Example of 200 response:
+
+    .. code-block:: json
+
+        {"detail": {"success": true, "keytool": "ok", "jarsigner": "ok"}}
+
+    Example of 409 response:
+
+    .. code-block:: json
+
+        {"detail": {"success": false, "keytool": "MISSING", "jarsigner": "ok"}}
+
+    :status 200: success.
+    :status 409: conflict.
+
+
+.. http:post:: /system/trace
+
+    A request to this endpoint will trigger an exception to test that
+    exceptions are handled correctly.
+
+    **Response**
+
+    N/A
+
+    :status 500: internal error.
+
+.. _`Hawk`: https://github.com/hueniverse/hawk
+.. _`statsd`: https://github.com/etsy/statsd/
