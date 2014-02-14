@@ -41,6 +41,13 @@ class SignTestBase(TestCase):
 
 class TestSignView(SignTestBase):
 
+    def setUp(self):
+        super(TestSignView, self).setUp()
+        p = mock.patch('apk_signer.sign.views.storage')
+        self.stor = p.start()
+        self.addCleanup(p.stop)
+        self.stor.bucket_key_exists.return_value = True
+
     def test_missing_s3_path(self):
         data = self.data()
         del data['unsigned_apk_s3_path']
@@ -60,6 +67,10 @@ class TestSignView(SignTestBase):
         data = self.data()
         del data['apk_id']
         eq_(self.post(data).status_code, 400)
+
+    def test_non_existant_key(self):
+        self.stor.bucket_key_exists.return_value = False
+        eq_(self.post().status_code, 400)
 
 
 class TestSignedStorage(SignTestBase):

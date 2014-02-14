@@ -28,6 +28,14 @@ def signed_apk_url(key_path, conn=None):
                                                   key=key.name)
 
 
+def bucket_key_exists(bkt_name, key_path, conn=None):
+    """Returns True if key exists in bucket."""
+    if not conn:
+        conn = connect()
+    bkt = bucket(bkt_name, conn=conn)
+    return bkt.get_key(key_path) is not None
+
+
 def get_apk(key_path, conn=None):
     """
     Gets an unsigned APK file.
