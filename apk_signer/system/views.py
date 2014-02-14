@@ -45,7 +45,7 @@ class StatsView(UnprotectedAPIView):
 class TraceView(UnprotectedAPIView):
 
     def post(self, request):
-        raise RuntimeError(
+        raise TraceViewException(
             'This is a synthetic exception. Carry on, nothing to see')
 
 
@@ -70,3 +70,7 @@ class ToolsView(UnprotectedAPIView):
         else:
             # Make the return format compatible with exceptions.
             return Response({'detail': res})
+
+
+class TraceViewException(RuntimeError):
+    pass
