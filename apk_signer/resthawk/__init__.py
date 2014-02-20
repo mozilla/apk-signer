@@ -39,12 +39,13 @@ class HawkAuthentication(BaseAuthentication):
             raise AuthenticationFailed('missing authorization header')
 
         try:
-            receiver = Receiver(lookup_credentials,
-                                request.META['HTTP_AUTHORIZATION'],
-                                request.build_absolute_uri(),
-                                request.method,
-                                content=request.body,
-                                content_type=request.META.get('CONTENT_TYPE'))
+            receiver = Receiver(
+                lookup_credentials,
+                request.META['HTTP_AUTHORIZATION'],
+                request.build_absolute_uri(),
+                request.method,
+                content=request.body,
+                content_type=request.META.get('CONTENT_TYPE', ''))
         except HawkFail, exc:
             log.debug(traceback.format_exc())
             log.info('Hawk: denying access because of '
