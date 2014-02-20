@@ -3,6 +3,7 @@ from cStringIO import StringIO
 import hashlib
 import tempfile
 
+from django.conf import settings
 from django.core.urlresolvers import reverse
 
 import mock
@@ -71,6 +72,8 @@ class TestSignView(SignTestBase):
     def test_non_existant_key(self):
         self.stor.bucket_key_exists.return_value = False
         eq_(self.post().status_code, 400)
+        self.stor.bucket_key_exists.assert_called_with(
+            settings.S3_APK_BUCKET, self.key_path)
 
 
 class TestSignedStorage(SignTestBase):
