@@ -30,3 +30,5 @@ APK_SIGNER_KEYS_TEMP_DIR = '/nowhere/dont/even/try'
 
 # Find these on $PATH
 APK_SIGNER_JAVA_CLI_PATH = ''
+
+APK_USER_MODE = 'END_USER'

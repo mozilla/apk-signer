@@ -10,8 +10,13 @@ import uuid
 
 from django.conf import settings
 
+from commonware.log import getLogger
+
 from apk_signer import storage
+from apk_signer.base import get_user_mode
 from apk_signer.storage import AppKeyAlreadyExists, NoSuchKey
+
+log = getLogger(__name__)
 
 
 class SigningError(Exception):
@@ -20,43 +25,43 @@ class SigningError(Exception):
 
 def gen_keystore(apk_id):
     """
-    Generates a new key using Java's command line utility keytool
-
-    The resulting command line:
-
-    keytool -genkey
-            -keystore <apk_id>.p12
-            -storepass mozilla
-            -alias 0
-            -validity <10 years>
-            -keyalg RSA
-            -keysize 2048
-            -storetype pkcs12
-            -dname "CN=Generated key for <apk_id>, OU=Mozilla APK Factory, O=Mozilla Marketplace, L=Mountain View, ST=California, C=US"
+    Generates a new key store using Java's keytool command.
     """
 
-    # Generate the dname from the template
-    # FIXME This should really come from Django settings, probably
-    dname = ["CN=Generated key for ID {id}".format(id=apk_id),
-             "OU=Mozilla APK Factory",
-             "O=Mozilla Marketplace",
+    mode = get_user_mode()
+    log.info('generating key store for app ID {id} in '
+             '{mode} mode'.format(mode=mode, id=apk_id))
+
+    # -dname = distinguished name
+    # CN = common name
+    # OU = organizational unit
+    dname = ["CN={mode}: Marketplace app ID {id}".format(id=apk_id,
+                                                         mode=mode),
+             "OU={mode}: Mozilla APK Signer".format(mode=mode),
+             "O=Firefox Marketplace",
              "L=Mountain View",
              "ST=California",
              "C=US"]
 
-    # TODO: delete keystores after use!
+    # TODO: delete keystores after use! bug 976295
     keystore = os.path.join(settings.APK_SIGNER_KEYS_TEMP_DIR,
                             'gen_keystore_{u}'.format(u=uuid.uuid4()))
+
+    if mode == 'REVIEWER':
+        validity = settings.APK_REVIEWER_VALIDITY_PERIOD
+    else:
+        validity = settings.APK_END_USER_VALIDITY_PERIOD
+
     args = [
         '-genkey',
         '-keystore', keystore,
         '-storepass', settings.APK_SIGNER_STORE_PASSWD,
+        # We currently aren't using aliases. This flag is intended for having
+        # multiple key pairs in the same keystore.
         '-alias', '0',
-        '-validity', str(int(getattr(settings, 'APK_SIGNER_VALIDITY_PERIOD',
-                                     365 * 10))),
-        '-keyalg', getattr(settings, 'APK_SIGNER_APP_KEY_ALGO', 'RSA'),
-        '-keysize', str(int(getattr(settings, 'APK_SIGNER_APP_KEY_LENGTH',
-                                    2048))),
+        '-validity', str(validity),
+        '-keyalg', settings.APK_SIGNER_APP_KEY_ALGO,
+        '-keysize', str(settings.APK_SIGNER_APP_KEY_LENGTH),
         '-storetype', 'pkcs12',
         '-dname', ', '.join(dname)]
 
@@ -66,16 +71,15 @@ def gen_keystore(apk_id):
         raise SigningError("Failed to generate key: ID {id}: {exc}"
                            .format(id=apk_id, exc=exc))
 
-    # TODO: verify cert.
-    # We should really verify that the certificate in the keystore has the
-    # dname that we expect but there's no quick way to do that with the Java
-    # command line tools.  It should be easily possible with M2Crypto but I'm
-    # not certain that we want to install that.
     return keystore
 
 
-def make_keystore(apk_id):
+def make_keystore(apk_id, store=True):
     fp = open(gen_keystore(apk_id), 'rb')
+    if not store:
+        # Not saving the key so return it as is.
+        return fp
+
     try:
         storage.put_app_key(fp, apk_id)
     except AppKeyAlreadyExists, e:
@@ -88,12 +92,23 @@ def make_keystore(apk_id):
 def get_keystore(apk_id):
     """
     Returns an open file object for a key store.
-    A keystore will be generated and saved to S3 if it doesn't exist.
+
+    An end-user keystore will be generated and saved to S3 if it doesn't
+    exist. Reviewer keystores are always generated.
     """
-    try:
-        return storage.get_app_key(apk_id)
-    except NoSuchKey:
-        return make_keystore(apk_id)
+    if get_user_mode() == 'REVIEWER':
+        log.info('reviewer mode: generating a new keystore')
+        # Always generate new key stores for reviewers.
+        # Thus, we don't need to store them.
+        return make_keystore(apk_id, store=False)
+    else:
+        log.info('end-user mode: fetching/generating/storing keystore')
+        try:
+            # TODO: maybe check for expired key stores. In other words,
+            # this code will break in 10 years :)
+            return storage.get_app_key(apk_id)
+        except NoSuchKey:
+            return make_keystore(apk_id)
 
 
 def sign(apk_id, apk_fp):

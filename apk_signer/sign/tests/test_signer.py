@@ -140,6 +140,33 @@ class TestSigning(Base):
             signer.make_keystore(self.apk_id)
 
 
+@mock.patch.object(settings, 'APK_USER_MODE', 'REVIEWER')
+class TestReviewerSigning(Base):
+
+    @mock.patch('apk_signer.sign.signer.jarsigner')
+    @mock.patch('apk_signer.sign.signer.gen_keystore')
+    def test_always_generate(self, gen_keystore, jarsigner):
+        gen_keystore.return_value = self.open_keystore().name
+
+        with self.unsigned_apk() as apk:
+            signer.sign(self.apk_id, apk)
+
+        assert not self.stor.get_app_key.called, (
+            'key stores should not be fetched in reviewer mode')
+        assert not self.stor.put_app_key.called, (
+            'key stores should not be saved in reviewer mode')
+        assert gen_keystore.called, (
+            'key store should have been generated')
+
+    @mock.patch('apk_signer.sign.signer.keytool')
+    def test_reviewer_common_name(self, keytool):
+        signer.gen_keystore(self.apk_id)
+        assert keytool.called
+        args = ' '.join(keytool.call_args[0][0])
+        # Quick sanity check to make sure reviewer mode changes the CN.
+        assert '-dname CN=REVIEWER:' in args, args
+
+
 class TestFindExecutable(TestCase):
 
     def test_missing(self):
