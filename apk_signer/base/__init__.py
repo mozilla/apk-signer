@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 from commonware.log import getLogger
 from cef import log_cef as orig_log_cef
@@ -61,3 +62,13 @@ class UnprotectedAPIView(APIView):
     """
     authentication_classes = []
     permission_classes = [AllowAny]
+
+
+def get_user_mode():
+    """
+    Returns the user mode for this hosted instance of the signer.
+    """
+    if settings.APK_USER_MODE not in ('END_USER', 'REVIEWER'):
+        raise ImproperlyConfigured('Unexpected APK_USER_MODE: {m}'
+                                   .format(m=settings.APK_USER_MODE))
+    return settings.APK_USER_MODE

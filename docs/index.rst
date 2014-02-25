@@ -24,6 +24,7 @@ Contents
 
    api
    development
+   deploy
 
 Indices and tables
 ------------------

@@ -262,8 +262,13 @@ APK_SIGNER_KEYS_TEMP_DIR = tempfile.gettempdir()
 # The password for all PKCS12 files
 APK_SIGNER_STORE_PASSWD = ''
 
-# How long is each generated self signed certificate valid for
-APK_SIGNER_VALIDITY_PERIOD = 3650  # 10 years
+# For end-users installing APKs, this sets how
+# many days each KeyStore certificate is valid for.
+APK_END_USER_VALIDITY_PERIOD = 3650  # 10 years
+
+# For app reviewers installing APKs, this sets how
+# many days each KeyStore certificate is valid for.
+APK_REVIEWER_VALIDITY_PERIOD = 1
 
 # Type of key to use to sign the APK manifest
 APK_SIGNER_APP_KEY_ALGO = 'RSA'
@@ -279,3 +284,9 @@ APK_SIGNER_SIGN_SIG_ALGO = 'SHA1withRSA'
 
 # Digest algorithm to use on the APK manifest to generate signatures
 APK_SIGNER_SIGN_DIGEST_ALGO = 'SHA1'
+
+# This specifies how the deployed signer instance will be used.
+# Possibilities: END_USER, REVIEWER.
+# In end-user mode, APKs will be signed for use by Firefox for Android users.
+# In reviewer mode, APKs will be signed for use by app reviewers.
+APK_USER_MODE = 'END_USER'
