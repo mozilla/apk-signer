@@ -95,6 +95,13 @@ STATIC_URL = '/static/'
 
 # Custom settings.
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'apk_signer'
+    }
+}
+
 STATSD_CLIENT = 'django_statsd.clients.normal'
 
 
@@ -156,6 +163,11 @@ LOGGING = {
         },
         'cef': {
             'handlers': ['cef_syslog']
+        },
+        'apk_signer.resthawk': {
+            'handlers': ['unicodesyslog'],
+            'level': 'INFO',
+            'propagate': True,
         },
         'mohawk': {
             'handlers': ['unicodesyslog'],
@@ -232,6 +244,13 @@ HAWK_CREDENTIALS = {
         'algorithm': 'sha256'
     },
 }
+
+# Number of seconds until a Hawk message expires.
+HAWK_MESSAGE_EXPIRATION = 60
+
+# When True, use the Django cache framework for checking Hawk nonces.
+# Django must already be configured to use some kind of caching backend.
+USE_CACHE_FOR_HAWK_NONCE = True
 
 # Amazon Web Services access key for use with S3.
 AWS_ACCESS_KEY = ''

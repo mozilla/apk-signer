@@ -8,12 +8,15 @@ from . import BaseTest
 from .. import DummyUser, HawkAuthentication
 
 
-@mock.patch.object(settings, 'SKIP_HAWK_AUTH', False)
-class TestAuthentication(BaseTest):
+class AuthTest(BaseTest):
 
     def setUp(self):
-        super(TestAuthentication, self).setUp()
+        super(AuthTest, self).setUp()
         self.auth = HawkAuthentication()
+
+
+@mock.patch.object(settings, 'SKIP_HAWK_AUTH', False)
+class TestAuthentication(AuthTest):
 
     def test_missing_auth_header(self):
         req = self.factory.get('/')
@@ -30,8 +33,8 @@ class TestAuthentication(BaseTest):
         eq_(exc.exception.detail, 'authentication failed')
 
     def test_hawk_get(self):
-        sender = self._sender(content_type='')
-        req = self._request(sender, content_type='')
+        sender = self._sender()
+        req = self._request(sender)
         assert isinstance(self.auth.authenticate(req)[0], DummyUser), (
             'Expected a successful authentication returning a dummy user')
 
@@ -90,3 +93,41 @@ class TestAuthentication(BaseTest):
             self.auth.authenticate(req)
 
         eq_(exc.exception.detail, 'authentication failed')
+
+
+@mock.patch.object(settings, 'SKIP_HAWK_AUTH', False)
+@mock.patch.object(settings, 'USE_CACHE_FOR_HAWK_NONCE', True)
+class TestNonce(AuthTest):
+
+    def setUp(self):
+        super(TestNonce, self).setUp()
+        p = mock.patch('apk_signer.resthawk.cache')
+        self.cache = p.start()
+        self.addCleanup(p.stop)
+
+    def auth_request(self):
+        sender = self._sender()
+        req = self._request(sender)
+        self.auth.authenticate(req)
+
+    def test_check_nonce_ok(self):
+        self.cache.get.return_value = False
+        self.auth_request()
+        assert self.cache.get.called, 'nonce should have been checked'
+
+    def test_store_nonce(self):
+        self.cache.get.return_value = False
+        self.auth_request()
+        assert self.cache.set.called, 'nonce should have been cached'
+
+    def test_nonce_exists(self):
+        self.cache.get.return_value = True
+        with self.assertRaises(AuthenticationFailed) as exc:
+            self.auth_request()
+
+        eq_(exc.exception.detail, 'authentication failed')
+
+    def test_disabled(self):
+        with self.settings(USE_CACHE_FOR_HAWK_NONCE=False):
+            self.auth_request()
+        assert not self.cache.get.called, 'nonce check should be disabled'

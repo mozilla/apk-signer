@@ -12,7 +12,7 @@ class BaseTest(TestCase):
         self.credentials_id = 'apk-factory'
         self.credentials = settings.HAWK_CREDENTIALS[self.credentials_id]
 
-    def _request(self, sender, method='GET', content_type='text/plain',
+    def _request(self, sender, method='GET', content_type='',
                  url=None, **kw):
         if not url:
             url = self.url
@@ -24,7 +24,7 @@ class BaseTest(TestCase):
                           data=kw.pop('data', ''),
                           **kw)
 
-    def _sender(self, method='GET', content_type='text/plain', url=None,
+    def _sender(self, method='GET', content_type='', url=None,
                 credentials=None, content=''):
         if not url:
             url = self.url
