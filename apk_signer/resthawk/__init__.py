@@ -9,6 +9,7 @@ import logging
 import traceback
 
 from django.conf import settings
+from django.core.cache import cache
 
 from mohawk import Receiver
 from mohawk.exc import HawkFail
@@ -36,6 +37,7 @@ class HawkAuthentication(BaseAuthentication):
             return on_success
 
         if not request.META.get('HTTP_AUTHORIZATION'):
+            log.debug('request did not send an Authorization header')
             raise AuthenticationFailed('missing authorization header')
 
         try:
@@ -45,7 +47,10 @@ class HawkAuthentication(BaseAuthentication):
                 request.build_absolute_uri(),
                 request.method,
                 content=request.body,
-                content_type=request.META.get('CONTENT_TYPE', ''))
+                seen_nonce=(seen_nonce if settings.USE_CACHE_FOR_HAWK_NONCE
+                            else None),
+                content_type=request.META.get('CONTENT_TYPE', ''),
+                timestamp_skew_in_seconds=settings.HAWK_MESSAGE_EXPIRATION)
         except HawkFail, exc:
             log.debug(traceback.format_exc())
             log.info('Hawk: denying access because of '
@@ -66,3 +71,21 @@ def lookup_credentials(cr_id):
     if cr_id not in settings.HAWK_CREDENTIALS:
         raise LookupError('No Hawk ID of {id}'.format(id=cr_id))
     return settings.HAWK_CREDENTIALS[cr_id]
+
+
+def seen_nonce(nonce, timestamp):
+    """
+    Returns True if the Hawk nonce has been seen already.
+    """
+    key = '{n}:{ts}'.format(n=nonce, ts=timestamp)
+    if cache.get(key):
+        log.warning('replay attack? already processed nonce {k}'
+                    .format(k=key))
+        return True
+    else:
+        log.debug('caching nonce {k}'.format(k=key))
+        cache.set(key, True,
+                  # We only need the nonce until the message itself expires.
+                  # This also adds a little bit of padding.
+                  timeout=settings.HAWK_MESSAGE_EXPIRATION + 5)
+        return False
