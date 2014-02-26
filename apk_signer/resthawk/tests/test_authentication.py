@@ -1,47 +1,11 @@
 from django.conf import settings
-from django.http import HttpResponse
-from django.test import RequestFactory, TestCase
 
 import mock
-from mohawk import Receiver, Sender
-from mohawk.exc import MacMismatch
 from nose.tools import eq_
 from rest_framework.exceptions import AuthenticationFailed
 
-from .. import (DummyUser, HawkAuthentication, lookup_credentials)
-from ..middleware import HawkResponseMiddleware
-
-
-class BaseTest(TestCase):
-
-    def setUp(self):
-        self.factory = RequestFactory()
-        self.url = 'http://testserver/'
-        self.credentials_id = 'apk-factory'
-        self.credentials = settings.HAWK_CREDENTIALS[self.credentials_id]
-
-    def _request(self, sender, method='GET', content_type='text/plain',
-                 url=None, **kw):
-        if not url:
-            url = self.url
-
-        do_request = getattr(self.factory, method.lower())
-        return do_request(self.url,
-                          HTTP_AUTHORIZATION=sender.request_header,
-                          content_type=content_type,
-                          data=kw.pop('data', ''),
-                          **kw)
-
-    def _sender(self, method='GET', content_type='text/plain', url=None,
-                credentials=None, content=''):
-        if not url:
-            url = self.url
-        if not credentials:
-            credentials = self.credentials
-        return Sender(credentials,
-                      url, method,
-                      content=content,
-                      content_type=content_type)
+from . import BaseTest
+from .. import DummyUser, HawkAuthentication
 
 
 @mock.patch.object(settings, 'SKIP_HAWK_AUTH', False)
@@ -126,65 +90,3 @@ class TestAuthentication(BaseTest):
             self.auth.authenticate(req)
 
         eq_(exc.exception.detail, 'authentication failed')
-
-
-@mock.patch.object(settings, 'SKIP_HAWK_AUTH', False)
-class TestMiddleware(BaseTest):
-
-    def setUp(self):
-        super(TestMiddleware, self).setUp()
-        self.mw = HawkResponseMiddleware()
-
-    def request(self, method='GET', content_type='text/plain', url=None):
-        if not url:
-            url = self.url
-        sender = self._sender(method=method, content_type=content_type)
-        req = self._request(sender, method=method, content_type=content_type)
-        self.authorize_request(sender, req, url=url, method=method)
-
-        return req, sender
-
-    def authorize_request(self, sender, req, url=None, method='GET'):
-        if not url:
-            url = self.url
-        # Simulate how a view authorizes a request.
-        receiver = Receiver(lookup_credentials,
-                            sender.request_header,
-                            url, method,
-                            content=req.body,
-                            content_type=req.META['content_type'])
-        req.META['hawk.receiver'] = receiver
-
-    def accept_response(self, response, sender):
-        sender.accept_response(response['Server-Authorization'],
-                               content=response.content,
-                               content_type=response['Content-Type'])
-
-    def test_respond_ok(self):
-        req, sender = self.request()
-
-        response = HttpResponse('the response')
-        res = self.mw.process_response(req, response)
-        self.accept_response(res, sender)
-
-    def test_respond_with_bad_content(self):
-        req, sender = self.request()
-
-        response = HttpResponse('the response')
-        res = self.mw.process_response(req, response)
-
-        response.content = 'TAMPERED WITH'
-
-        with self.assertRaises(MacMismatch):
-            self.accept_response(res, sender)
-
-    def test_respond_with_bad_content_type(self):
-        req, sender = self.request()
-
-        response = HttpResponse('the response')
-        res = self.mw.process_response(req, response)
-
-        response['Content-Type'] = 'TAMPERED WITH'
-
-        with self.assertRaises(MacMismatch):
-            self.accept_response(res, sender)
