@@ -9,6 +9,8 @@ from zipfile import ZipFile
 
 from django.conf import settings
 
+from nose.tools import eq_
+
 from apk_signer.base.tests import TestCase
 from apk_signer.storage import AppKeyAlreadyExists, NoSuchKey
 from apk_signer.sign import signer
@@ -61,12 +63,13 @@ MANIFEST = """{
 class Base(TestCase):
 
     def setUp(self):
-        tmp = tempfile.mkdtemp(prefix='tmp_apk_signer_test_')
-        tmp_p = mock.patch.object(settings, 'APK_SIGNER_KEYS_TEMP_DIR', tmp)
+        self.tmp = tempfile.mkdtemp(prefix='tmp_apk_signer_test_')
+        tmp_p = mock.patch.object(settings, 'APK_SIGNER_KEYS_TEMP_DIR',
+                                  self.tmp)
         tmp_p.start()
 
         def rm_tmp():
-            shutil.rmtree(tmp)
+            shutil.rmtree(self.tmp)
             tmp_p.stop()
 
         self.addCleanup(rm_tmp)
@@ -81,7 +84,9 @@ class Base(TestCase):
         self.addCleanup(p.stop)
 
     def open_keystore(self):
-        kf = open(asset('test.keystore'), 'rb')
+        tmp_key = os.path.join(self.tmp, 'test.keystore')
+        shutil.copy(asset('test.keystore'), tmp_key)
+        kf = open(tmp_key, 'rb')
         self.addCleanup(kf.close)
         return kf
 
@@ -121,6 +126,9 @@ class TestSigning(Base):
 
             buf = '\n'.join(buf)
             assert buf.strip().endswith('jar verified.'), buf
+
+        # Make sure we don't leave any key stores on the server.
+        eq_(os.listdir(self.tmp), [])
 
     @mock.patch('apk_signer.sign.signer.jarsigner')
     def test_no_keystore(self, jarsigner):

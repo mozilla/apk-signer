@@ -130,6 +130,11 @@ def sign(apk_id, apk_fp):
     except JarSignerError, exc:
         raise SigningError("Failed to sign APK: ID {id}: {exc}"
                            .format(id=apk_id, exc=exc))
+    finally:
+        key_fp.close()
+        # Remove the temporary key store we downloaded from S3 so
+        # it's not sitting around on the server.
+        os.unlink(key_fp.name)
 
     signed_fp.seek(0)
     return signed_fp
