@@ -22,7 +22,7 @@ HAWK_CREDENTIALS = {
 }
 
 # This lets Nose capture logging.
-del LOGGING['loggers']['apk_signer.resthawk']
+del LOGGING['loggers']['hawkrest']
 del LOGGING['loggers']['mohawk']
 
 APK_SIGNER_STORE_PASSWD = 'keytool password just for testing'

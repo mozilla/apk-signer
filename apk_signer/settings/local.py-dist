@@ -37,6 +37,26 @@ SECRET_KEY = ''
 #LOGGING['loggers']['']['handlers'] = ['console']
 #LOGGING['loggers']['cef']['handlers'] = ['console']
 
+# Debug stuff:
+
+#LOGGING['loggers']['hawkrest'] = {
+#    'handlers': ['console'],
+#    'level': 'DEBUG',
+#    'propagate': False,
+#}
+#
+#LOGGING['loggers']['mohawk'] = {
+#    'handlers': ['console'],
+#    'level': 'DEBUG',
+#    'propagate': False,
+#}
+#
+#LOGGING['loggers']['boto'] = {
+#    'handlers': ['console'],
+#    'level': 'DEBUG',
+#    'propagate': False,
+#}
+
 HAWK_CREDENTIALS = base.HAWK_CREDENTIALS
 # Set these to long random strings.
 HAWK_CREDENTIALS['apk-factory']['key'] = ''

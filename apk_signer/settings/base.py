@@ -40,10 +40,10 @@ INSTALLED_APPS = (
     # Third-party apps, patches, fixes
     'raven.contrib.django',
     'rest_framework',
+    'hawkrest',
 
     # Local apps
     'apk_signer.base',
-    'apk_signer.resthawk',
     'apk_signer.system',
 )
 
@@ -57,7 +57,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     #'django.contrib.messages.middleware.MessageMiddleware',
     'django_paranoia.sessions.ParanoidSessionMiddleware',
-    'apk_signer.resthawk.middleware.HawkResponseMiddleware',
+    'hawkrest.middleware.HawkResponseMiddleware',
 )
 
 ROOT_URLCONF = 'apk_signer.urls'
@@ -164,7 +164,7 @@ LOGGING = {
         'cef': {
             'handlers': ['cef_syslog']
         },
-        'apk_signer.resthawk': {
+        'hawkrest': {
             'handlers': ['unicodesyslog'],
             'level': 'INFO',
             'propagate': True,
@@ -193,7 +193,7 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.JSONParser',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'apk_signer.resthawk.HawkAuthentication',
+        'hawkrest.HawkAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny',
