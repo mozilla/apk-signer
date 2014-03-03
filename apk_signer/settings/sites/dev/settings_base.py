@@ -26,3 +26,13 @@ APK_SIGNER_STORE_PASSWD = private.APK_SIGNER_STORE_PASSWD
 APK_SIGNER_KEYS_TEMP_DIR = private.APK_SIGNER_KEYS_TEMP_DIR
 
 APK_USER_MODE = getattr(private, 'APK_USER_MODE', 'END_USER')
+
+CACHE_PREFIX = APK_USER_MODE
+CACHES = {
+    'default': {
+        'BACKEND': 'caching.backends.memcached.MemcachedCache',
+        'LOCATION': private.CACHES_DEFAULT_LOCATION,
+        'TIMEOUT': 500,
+        'KEY_PREFIX': CACHE_PREFIX,
+    },
+}
