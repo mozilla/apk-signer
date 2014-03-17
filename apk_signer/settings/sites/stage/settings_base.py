@@ -34,7 +34,7 @@ APK_USER_MODE = getattr(private, 'APK_USER_MODE', 'END_USER')
 CACHE_PREFIX = APK_USER_MODE
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
         'LOCATION': private.CACHES_DEFAULT_LOCATION,
         'TIMEOUT': 500,
         'KEY_PREFIX': CACHE_PREFIX,

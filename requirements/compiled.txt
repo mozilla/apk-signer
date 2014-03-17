@@ -1,3 +1,4 @@
 # Any module that requires compilation should be listed here.
 # Be sure that you always specify an exact version such as:
 # foo==1.2.3 and you list all dependencies explicitly.
+pylibmc==1.2.3
