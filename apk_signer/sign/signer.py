@@ -134,7 +134,8 @@ def sign(apk_id, apk_fp):
         key_fp.close()
         # Remove the temporary key store we downloaded from S3 so
         # it's not sitting around on the server.
-        os.unlink(key_fp.name)
+        if os.path.exists(key_fp.name):
+            os.unlink(key_fp.name)
 
     signed_fp.seek(0)
     return signed_fp
