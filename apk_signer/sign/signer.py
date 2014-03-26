@@ -105,7 +105,7 @@ def get_keystore(apk_id):
         log.info('end-user mode: fetching/generating/storing keystore')
         try:
             # TODO: maybe check for expired key stores. In other words,
-            # this code will break in 10 years :)
+            # this code will break in 30 years :)
             return storage.get_app_key(apk_id)
         except NoSuchKey:
             return make_keystore(apk_id)

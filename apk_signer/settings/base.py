@@ -119,9 +119,8 @@ LOGGING = {
     'formatters': {
         'base': {
             '()': 'logging.Formatter',
-            'format':
-                '%(name)s:%(levelname)s '
-                '%(message)s :%(pathname)s:%(lineno)s'
+            'format': '%(name)s:%(levelname)s '
+                      '%(message)s :%(pathname)s:%(lineno)s'
         },
         'cef': {
             '()': cef.SysLogFormatter,
@@ -283,7 +282,9 @@ APK_SIGNER_STORE_PASSWD = ''
 
 # For end-users installing APKs, this sets how
 # many days each KeyStore certificate is valid for.
-APK_END_USER_VALIDITY_PERIOD = 3650  # 10 years
+# 30 years seems necessary to stop Google Play complaining.
+# See bug 988450.
+APK_END_USER_VALIDITY_PERIOD = 365 * 30  # 30 years
 
 # For app reviewers installing APKs, this sets how
 # many days each KeyStore certificate is valid for.
