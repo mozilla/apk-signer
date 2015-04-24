@@ -219,8 +219,9 @@ man_pages = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'http://docs.python.org/': None}
 
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
-import mdn_theme
-
-html_theme_path = [mdn_theme.get_theme_dir()]
-html_theme = 'mdn'
+if not on_rtd:  # only import and set the theme if we're building docs locally
+    import sphinx_rtd_theme
+    html_theme = 'sphinx_rtd_theme'
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
