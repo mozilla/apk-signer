@@ -49,6 +49,7 @@ Working On Docs
 
 ::
 
+    pip install --no-deps -r requirements/docs.txt
     make -C docs/ html
 
 .. _django-nose: https://github.com/django-nose/django-nose
